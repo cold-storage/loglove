@@ -28,8 +28,9 @@ different levels and the ability to change configuration at runtime.</p>
 <p>To easily configure both a logger and its descendents,
 name your loggers with path notation like
 <code>&quot;/some/cool/logger&quot;</code>. Often you will use the source
-file name.</p>
-<pre><code>log = new(require(&#39;../lib/logger&#39;))(__filename)</code></pre>
+file name like so.</p>
+<pre><code>loglove = require(&#39;loglove&#39;)
+log = loglove.getLog(__filename)</code></pre>
 <p>Next most important are formatters that allow you to decorate your log
 messages with timestamp, level, etc.</p>
 
@@ -50,12 +51,14 @@ messages with timestamp, level, etc.</p>
                 <a class="pilcrow" href="#section-2">&#182;</a>
               </div>
               <h2 id="constructor">Constructor</h2>
+<p>NOTE: If you are using __filename to name your loggers, you will probably
+want to set the LOG_LOVE_ROOT_PATH environment variable before starting
+your app so your logger names are relative to your app&#39;s root path.</p>
 
             </div>
             
             <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">Log</span><span class="params">(name, level)</span> {</span>
   <span class="keyword">var</span> rootPath = process.env.LOG_LOVE_ROOT_PATH || <span class="string">''</span>;
-  debugger;
   <span class="keyword">this</span>.name = name.substr(rootPath.length);
   <span class="keyword">this</span>.level = exports[level] || exports.DEFAULT_LEVEL;
   exports.logmap[name] = <span class="keyword">this</span>;
