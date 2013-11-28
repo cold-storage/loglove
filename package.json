@@ -1,0 +1,26 @@
+{
+  "name": "loglove",
+  "description": "Logger for node.js",
+  "version": "0.0.1",
+  "author": "John Stein <john@johnandkerri.com>",
+  "keywords": [
+    "log",
+    "logger"
+  ],
+  "main": "./lib/loglove.js",
+  "engines": {
+    "node": ">= 0.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johndstein/loglove.git"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-shell": "~0.3.1",
+    "grunt-contrib-clean": "0.5.0",
+    "mocha": "~1.12.0",
+    "chai": "~1.7.2",
+    "grunt-open": "~0.2.2"
+  }
+}
