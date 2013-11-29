@@ -19,7 +19,7 @@ module.exports = function(grunt) {
     },
     open: {
       doc: {
-        path: './doc/logger.html',
+        path: './doc/loglove.html',
         app: 'Google Chrome'
       }
     }
