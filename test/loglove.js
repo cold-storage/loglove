@@ -1,4 +1,5 @@
 var ll = require('../lib/loglove'),
+  fmt = require('util').format,
   assert = require('chai').assert;
 
 var llToString = '{"rootPath":"","config":{},"logmap":{},"formatter":"function (name, msg, level) {\\n    return fmt(JSON.stringify(new Date()).slice(1, -1), level.substr(0, 3), name, msg);\\n  }"}';
@@ -29,6 +30,21 @@ describe('loglove.js', function() {
       assert(!process.env.LOG_LOVE_CONFIG_FILE);
       process.env.LOG_LOVE_CONFIG_FILE = 'yummy';
       assert.equal(process.env.LOG_LOVE_CONFIG_FILE, 'yummy');
+    });
+  });
+
+  describe('colors', function() {
+    // ['\x1B[33m', '\x1B[39m']
+    var log;
+    before(function() {
+      ll.formatter(function(name, msg, level) {
+        return fmt('\x1B[42m' + JSON.stringify(new Date()).substr(1, 24) + '\x1B[49m',
+          '\x1B[33m' + level + '\x1B[39m', msg, name);
+      });
+      log = ll.log();
+    });
+    it('will show a colored log', function() {
+      log.info('green background on date, yellow level.');
     });
   });
 
@@ -79,21 +95,21 @@ describe('loglove.js', function() {
     });
     it('will not smoke', function() {
       log.emergency('yo %s %d', 'p1', 33.44);
-      assert.equal(log.message, 'HI /test/loglove.js EM yo p1 33.44');
+      assert.equal(log.__message, 'HI /test/loglove.js EM yo p1 33.44');
       log.alert('yo %s %d', 'p1', 33.44);
-      assert.equal(log.message, 'HI /test/loglove.js AL yo p1 33.44');
+      assert.equal(log.__message, 'HI /test/loglove.js AL yo p1 33.44');
       log.critical('yo %s %d', 'p1', 33.44);
-      assert.equal(log.message, 'HI /test/loglove.js CR yo p1 33.44');
+      assert.equal(log.__message, 'HI /test/loglove.js CR yo p1 33.44');
       log.error('yo %s %d', 'p1', 33.44);
-      assert.equal(log.message, 'HI /test/loglove.js ER yo p1 33.44');
+      assert.equal(log.__message, 'HI /test/loglove.js ER yo p1 33.44');
       log.warning('yo %s %d', 'p1', 33.44);
-      assert.equal(log.message, 'HI /test/loglove.js WA yo p1 33.44');
+      assert.equal(log.__message, 'HI /test/loglove.js WA yo p1 33.44');
       log.notice('yo %s %d', 'p1', 33.44);
-      assert.equal(log.message, 'HI /test/loglove.js WA yo p1 33.44');
+      assert.equal(log.__message, 'HI /test/loglove.js WA yo p1 33.44');
       log.info('yo %s %d', 'p1', 33.44);
-      assert.equal(log.message, 'HI /test/loglove.js WA yo p1 33.44');
+      assert.equal(log.__message, 'HI /test/loglove.js WA yo p1 33.44');
       log.debug('yo %s %d', 'p1', 33.44);
-      assert.equal(log.message, 'HI /test/loglove.js WA yo p1 33.44');
+      assert.equal(log.__message, 'HI /test/loglove.js WA yo p1 33.44');
     });
   });
 
