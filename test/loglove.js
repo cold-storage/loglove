@@ -39,8 +39,20 @@ describe('loglove.js', function() {
       log = ll.log('/some/logger');
     });
     it('will load correctly from file system', function() {
-      console.log(ll + '');
+      //console.log(ll + '');
       assert.equal(log.levelName, 'WARNING');
+    });
+  });
+
+  describe('LOG_LOVE_CONFIG_FILE not found', function() {
+    var log;
+    before(function() {
+      reset(null, 'can\'t find me');
+      log = ll.log('/some/logger');
+    });
+    it('will load not barf', function() {
+      //console.log(ll + '');
+      assert.equal(log.levelName, 'INFO');
     });
   });
 
