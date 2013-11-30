@@ -1,9 +1,10 @@
 var ll = require('../lib/loglove'),
   fmt = require('util').format,
   assert = require('chai').assert,
-  fs = require('fs');
+  fs = require('fs'),
+  log = ll.log(__filename);
 
-var llToString = '{"rootPath":"","config":{},"logmap":{},"formatter":"function (msg, level, name) {\\n    return fmt(JSON.stringify(new Date()).substr(1, 24), level.substr(0, 3), name, msg);\\n  }"}';
+var llToString = '{\"rootPath\":\"\",\"config\":{},\"logmap\":{},\"formatter\":\"function (level, name, args) {\\n    var msg = fmt.apply(null, args).replace(\x2F\\\\n|\\\\r\x2Fg, \' \');\\n    return fmt(JSON.stringify(\\n        new Date()).substr(1, 24),\\n      level.substr(0, 3),\\n      \'\\\\x1B[33m\' + msg + \'\\\\x1B[39m\',\\n      name);\\n  }\"}';
 
 function reset(rootPath, configFile) {
   delete process.env.LOG_LOVE_ROOT_PATH;
@@ -31,6 +32,28 @@ describe('loglove.js', function() {
   //   it('will . . .', function() {
   //   });
   // });
+
+  describe('method level logging', function() {
+    it('will concise as possible', function() {
+      var mlog = log.m('someMethodName').info('method specific logger here');
+      mlog.info('more logs for this method');
+    });
+  });
+
+  describe('wildcards', function() {
+    var log;
+    before(function() {
+      log = ll.configure({
+        "/some/**": "DEBUG"
+      }).log('/some/foo');
+      ll.configure({
+        "/some/**": "DEBUG"
+      });
+    });
+    it('will work', function() {
+      assert.equal(log.levelName, 'DEBUG');
+    });
+  });
 
   describe('RELOAD_INTERVAL_SECONDS', function() {
     var log;
@@ -66,7 +89,8 @@ describe('loglove.js', function() {
     // ['\x1B[33m', '\x1B[39m']
     var log;
     before(function() {
-      ll.formatter(function(msg, level, name) {
+      ll.formatter(function(level, name, args) {
+        var msg = fmt.apply(null, args).replace(/\n|\r/g, ' ');
         return fmt('\x1B[42m' + JSON.stringify(new Date()).substr(1, 24) + '\x1B[49m',
           'level=\x1B[33m' + level + '\x1B[39m', 'message="' + msg + '"', 'logger="' + name + '"');
       });
@@ -106,7 +130,8 @@ describe('loglove.js', function() {
     before(function() {
       reset('/Users/jstein/ubuntu/loglove');
       log = ll.log(__filename, 'DEBUG', true);
-      ll.formatter(function(msg, level, name) {
+      ll.formatter(function(level, name, args) {
+        var msg = fmt.apply(null, args).replace(/\n|\r/g, ' ');
         return 'HI ' + name + ' ' + level.substr(0, 2) + ' ' + msg;
       });
       ll.configure({
@@ -142,6 +167,7 @@ describe('loglove.js', function() {
       reset();
     });
     it('will reset the state', function() {
+      console.log(ll+'');
       assert.equal(ll + '', llToString);
     });
   });

@@ -77,7 +77,10 @@ otherwise.</p>
 <pre><code>{ &quot;RELOAD_INTERVAL_SECONDS&quot;: 60 }</code></pre>
 <p>In conjunction with <code>process.env.LOG_LOVE_CONFIG_FILE</code> this will cause
 the <code>LOG_LOVE_CONFIG_FILE</code> to be reloaded periodically.</p>
-<p>TODO Implement wildcards.</p>
+<p>TODO Implement wildcards (properly).</p>
+<p>TODO Allow setting <code>LOG_LOVE_ROOT_PATH</code> after loggers have been created.
+make <code>LOG_LOVE_ROOT_PATH</code> part of normal config. So only thing that
+has to go in <code>process.env</code> is <code>LOG_LOVE_CONFIG_FILE</code>.</p>
 
             </div>
             
@@ -85,17 +88,26 @@ the <code>LOG_LOVE_CONFIG_FILE</code> to be reloaded periodically.</p>
   <span class="keyword">if</span> (<span class="keyword">typeof</span> config === <span class="string">'string'</span> || config === String) {
     config = JSON.parse(config);
   }
-  <span class="keyword">var</span> key, val, logger;
-  <span class="keyword">for</span> (key <span class="keyword">in</span> config) {
-    val = config[key];
-    ll.config[key] = val;
-    logger = ll.logmap[key];
-    <span class="keyword">if</span> (logger) {
-      logger.level = ll[config[key]];
-      logger.levelName = levelName(logger.level);
+  <span class="keyword">var</span> cfgLgName, cfgLvlName, logger, logname;
+  <span class="keyword">for</span> (cfgLgName <span class="keyword">in</span> config) {
+    cfgLvlName = config[cfgLgName];
+    ll.config[cfgLgName] = cfgLvlName;
+    <span class="keyword">if</span> (cfgLgName.indexOf(<span class="string">'/**'</span>, cfgLgName.length - <span class="number">3</span>) !== -<span class="number">1</span>) {
+      <span class="keyword">for</span> (logname <span class="keyword">in</span> ll.logmap) {
+        <span class="keyword">if</span> (logname.indexOf(cfgLgName.slice(<span class="number">0</span>, -<span class="number">2</span>)) === <span class="number">0</span>) {
+          ll.logmap[logname].level = ll[cfgLvlName];
+          ll.logmap[logname].levelName = cfgLvlName;
+        }
+      }
+    } <span class="keyword">else</span> {
+      logger = ll.logmap[cfgLgName];
+      <span class="keyword">if</span> (logger) {
+        logger.level = ll[cfgLvlName];
+        logger.levelName = cfgLvlName;
+      }
     }
-    <span class="keyword">if</span> (<span class="string">'/'</span> === key) {
-      ll.DEFAULT_LEVEL = ll[config[key]];
+    <span class="keyword">if</span> (<span class="string">'/'</span> === cfgLgName) {
+      ll.DEFAULT_LEVEL = ll[cfgLvlName];
     }
   }
   <span class="keyword">if</span> (ll.config[<span class="string">'RELOAD_INTERVAL_SECONDS'</span>] &amp;&amp; process.env.LOG_LOVE_CONFIG_FILE) {
@@ -110,6 +122,7 @@ the <code>LOG_LOVE_CONFIG_FILE</code> to be reloaded periodically.</p>
 
     }, ll.config[<span class="string">'RELOAD_INTERVAL_SECONDS'</span>] * <span class="number">1000</span>);
   }
+  <span class="keyword">return</span> <span class="keyword">this</span>;
 };</pre></div></div>
             
         </li>
@@ -127,6 +140,9 @@ You can use this to add timestamps, <font color='red'>colors</font>,
 log level, name, etc. to your log messages.
 The callback will be called as follows.</p>
 <pre><code>callback(message, levelString, loggerName);</code></pre>
+<p>This gives you complete control of how your log messages will look.
+To get started you can use a copy of the default formatter
+in the __reset method below.</p>
 
             </div>
             
@@ -340,19 +356,16 @@ which is <code>INFO</code> unless it has been changed.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
-              <h3 id="__log">__log</h3>
-<p>Private method.</p>
+              <h3 id="m">m</h3>
+<p>m is for (m)ethod level log. Returns a child copy of this log.
+The logger name is parent name + &#39;/&#39; + child name.
+Handy if your source file has hundreds of methods in it, which often
+seems to the case with JavaScript.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  __log: <span class="function"><span class="keyword">function</span><span class="params">(level, args)</span> {</span>
-    <span class="keyword">if</span> (<span class="keyword">this</span>.level &gt;= ll[level]) {
-      <span class="keyword">this</span>.__message = fmt.apply(<span class="literal">null</span>, args);
-      <span class="keyword">this</span>.__message = ll.formatter(<span class="keyword">this</span>.__message, level, <span class="keyword">this</span>.name);
-      <span class="keyword">if</span> (!<span class="keyword">this</span>.__noshow) {
-        console.log(<span class="keyword">this</span>.__message);
-      }
-    }
+            <div class="content"><div class='highlight'><pre>  m: <span class="function"><span class="keyword">function</span> <span class="title">m</span><span class="params">(name, level, noshow)</span> {</span>
+    <span class="keyword">return</span> <span class="keyword">new</span> Log(<span class="keyword">this</span>.name + <span class="string">'/'</span> + name, level, noshow);
   },</pre></div></div>
             
         </li>
@@ -371,7 +384,7 @@ At this level it would usually notify all tech staff on call.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>  emergency: <span class="function"><span class="keyword">function</span> <span class="title">emergency</span><span class="params">(msg)</span> {</span>
-    <span class="keyword">this</span>.__log(<span class="string">'EMERGENCY'</span>, arguments);
+    <span class="keyword">return</span> <span class="keyword">this</span>.__log(<span class="string">'EMERGENCY'</span>, arguments);
   },</pre></div></div>
             
         </li>
@@ -390,7 +403,7 @@ the problem. An example would be the loss of a primary ISP connection.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>  alert: <span class="function"><span class="keyword">function</span> <span class="title">alert</span><span class="params">(msg)</span> {</span>
-    <span class="keyword">this</span>.__log(<span class="string">'ALERT'</span>, arguments);
+    <span class="keyword">return</span> <span class="keyword">this</span>.__log(<span class="string">'ALERT'</span>, arguments);
   },</pre></div></div>
             
         </li>
@@ -409,7 +422,7 @@ system, an example is a loss of a backup ISP connection.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>  critical: <span class="function"><span class="keyword">function</span> <span class="title">critical</span><span class="params">(msg)</span> {</span>
-    <span class="keyword">this</span>.__log(<span class="string">'CRITICAL'</span>, arguments);
+    <span class="keyword">return</span> <span class="keyword">this</span>.__log(<span class="string">'CRITICAL'</span>, arguments);
   },</pre></div></div>
             
         </li>
@@ -428,7 +441,7 @@ each item must be resolved within a given time.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>  error: <span class="function"><span class="keyword">function</span> <span class="title">error</span><span class="params">(msg)</span> {</span>
-    <span class="keyword">this</span>.__log(<span class="string">'ERROR'</span>, arguments);
+    <span class="keyword">return</span> <span class="keyword">this</span>.__log(<span class="string">'ERROR'</span>, arguments);
   },</pre></div></div>
             
         </li>
@@ -448,7 +461,7 @@ resolved within a given time.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>  warning: <span class="function"><span class="keyword">function</span> <span class="title">warning</span><span class="params">(msg)</span> {</span>
-    <span class="keyword">this</span>.__log(<span class="string">'WARNING'</span>, arguments);
+    <span class="keyword">return</span> <span class="keyword">this</span>.__log(<span class="string">'WARNING'</span>, arguments);
   },</pre></div></div>
             
         </li>
@@ -468,7 +481,7 @@ in an email to developers or admins to spot potential problems
             </div>
             
             <div class="content"><div class='highlight'><pre>  notice: <span class="function"><span class="keyword">function</span> <span class="title">notice</span><span class="params">(msg)</span> {</span>
-    <span class="keyword">this</span>.__log(<span class="string">'NOTICE'</span>, arguments);
+    <span class="keyword">return</span> <span class="keyword">this</span>.__log(<span class="string">'NOTICE'</span>, arguments);
   },</pre></div></div>
             
         </li>
@@ -487,7 +500,7 @@ throughput, etc. -- no action required.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>  info: <span class="function"><span class="keyword">function</span> <span class="title">info</span><span class="params">(msg)</span> {</span>
-    <span class="keyword">this</span>.__log(<span class="string">'INFO'</span>, arguments);
+    <span class="keyword">return</span> <span class="keyword">this</span>.__log(<span class="string">'INFO'</span>, arguments);
   },</pre></div></div>
             
         </li>
@@ -506,7 +519,7 @@ during operations.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>  debug: <span class="function"><span class="keyword">function</span> <span class="title">debug</span><span class="params">(msg)</span> {</span>
-    <span class="keyword">this</span>.__log(<span class="string">'DEBUG'</span>, arguments);
+    <span class="keyword">return</span> <span class="keyword">this</span>.__log(<span class="string">'DEBUG'</span>, arguments);
   },</pre></div></div>
             
         </li>
@@ -517,6 +530,30 @@ during operations.</p>
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <h3 id="__log">__log</h3>
+<p>Private method.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  __log: <span class="function"><span class="keyword">function</span><span class="params">(level, args)</span> {</span>
+    <span class="keyword">if</span> (<span class="keyword">this</span>.level &gt;= ll[level]) {
+      <span class="keyword">this</span>.__message = ll.formatter(level, <span class="keyword">this</span>.name, args);
+      <span class="keyword">if</span> (!<span class="keyword">this</span>.__noshow) {
+        process.stdout.write(<span class="keyword">this</span>.__message + <span class="string">'\n'</span>);
+      }
+    }
+    <span class="keyword">return</span> <span class="keyword">this</span>;
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
               </div>
               <h3 id="tostring">toString</h3>
 <p>Pretty print the logger.</p>
@@ -531,11 +568,11 @@ during operations.</p>
         </li>
         
         
-        <li id="section-24">
+        <li id="section-25">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-24">&#182;</a>
+                <a class="pilcrow" href="#section-25">&#182;</a>
               </div>
               <h2 id="tostring">toString</h2>
 <p>Pretty print loglove.</p>
@@ -554,11 +591,11 @@ during operations.</p>
         </li>
         
         
-        <li id="section-25">
+        <li id="section-26">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-25">&#182;</a>
+                <a class="pilcrow" href="#section-26">&#182;</a>
               </div>
               <h2 id="__reset">__reset</h2>
 <p>Handy for unit testing. Should not be used otherwise.</p>
@@ -582,11 +619,11 @@ or <code>process.env.LOG_LOVE_CONFIG_FILE</code> and then call <code>_reset()</c
         </li>
         
         
-        <li id="section-26">
+        <li id="section-27">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-26">&#182;</a>
+                <a class="pilcrow" href="#section-27">&#182;</a>
               </div>
               <p>intentionally ignore error</p>
 
@@ -595,9 +632,30 @@ or <code>process.env.LOG_LOVE_CONFIG_FILE</code> and then call <code>_reset()</c
             <div class="content"><div class='highlight'><pre>    }
   }
   ll.config = ll.config || {};
-  exports.configure(ll.config);
-  ll.formatter = <span class="function"><span class="keyword">function</span><span class="params">(msg, level, name)</span> {</span>
-    <span class="keyword">return</span> fmt(JSON.stringify(<span class="keyword">new</span> Date()).substr(<span class="number">1</span>, <span class="number">24</span>), level.substr(<span class="number">0</span>, <span class="number">3</span>), name, msg);
+  exports.configure(ll.config);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>Default formatter outputs date, level, message and logger name.
+2013-11-30T14:41:56.446Z INF My message here. /my/logger/name.js
+You can copy this and tweak it till your heart&#39;s content.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  ll.formatter = <span class="function"><span class="keyword">function</span><span class="params">(level, name, args)</span> {</span>
+    <span class="keyword">var</span> msg = fmt.apply(<span class="literal">null</span>, args).replace(<span class="regexp">/\n|\r/g</span>, <span class="string">' '</span>);
+    <span class="keyword">return</span> fmt(JSON.stringify(
+        <span class="keyword">new</span> Date()).substr(<span class="number">1</span>, <span class="number">24</span>),
+      level.substr(<span class="number">0</span>, <span class="number">3</span>),
+      <span class="string">'\x1B[33m'</span> + msg + <span class="string">'\x1B[39m'</span>,
+      name);
   };
 };
 
