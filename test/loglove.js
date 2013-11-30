@@ -1,8 +1,9 @@
 var ll = require('../lib/loglove'),
   fmt = require('util').format,
-  assert = require('chai').assert;
+  assert = require('chai').assert,
+  fs = require('fs');
 
-var llToString = '{"rootPath":"","config":{},"logmap":{},"formatter":"function (name, msg, level) {\\n    return fmt(JSON.stringify(new Date()).slice(1, -1), level.substr(0, 3), name, msg);\\n  }"}';
+var llToString = '{"rootPath":"","config":{},"logmap":{},"formatter":"function (msg, level, name) {\\n    return fmt(JSON.stringify(new Date()).substr(1, 24), level.substr(0, 3), name, msg);\\n  }"}';
 
 function reset(rootPath, configFile) {
   delete process.env.LOG_LOVE_ROOT_PATH;
@@ -22,11 +23,39 @@ describe('loglove.js', function() {
     reset();
   });
 
+  // describe('loglove . . . ', function() {
+  //   var log;
+  //   before(function() {
+  //     log = ll.log();
+  //   });
+  //   it('will . . .', function() {
+  //   });
+  // });
+
+  describe('RELOAD_INTERVAL_SECONDS', function() {
+    var log;
+    before(function() {
+      fs.writeFileSync('./test/configs/reload.json', '{"/some/logger": "WARNING", "RELOAD_INTERVAL_SECONDS": 1}');
+      reset(null, './test/configs/reload.json');
+      log = ll.log('/some/logger');
+    });
+    it('will reload the config with new value', function(done) {
+      this.timeout(2000);
+      assert.equal(log.levelName, 'WARNING');
+      fs.writeFileSync('./test/configs/reload.json', '{"/some/logger": "DEBUG", "RELOAD_INTERVAL_SECONDS": 1}');
+      setTimeout(function() {
+        assert.equal(log.levelName, 'DEBUG');
+        done();
+      }, 1500);
+    });
+  });
+
   describe('process.env', function() {
     it('will allow you to modify it', function() {
       // JavaScript pretty much lets you do anythig, but wasn't sure if they
       // protected process.env or not. Would not want to change it in prod
       // but it's nice to be able to in testing.
+      delete process.env.LOG_LOVE_CONFIG_FILE;
       assert(!process.env.LOG_LOVE_CONFIG_FILE);
       process.env.LOG_LOVE_CONFIG_FILE = 'yummy';
       assert.equal(process.env.LOG_LOVE_CONFIG_FILE, 'yummy');
@@ -37,14 +66,14 @@ describe('loglove.js', function() {
     // ['\x1B[33m', '\x1B[39m']
     var log;
     before(function() {
-      ll.formatter(function(name, msg, level) {
+      ll.formatter(function(msg, level, name) {
         return fmt('\x1B[42m' + JSON.stringify(new Date()).substr(1, 24) + '\x1B[49m',
-          '\x1B[33m' + level + '\x1B[39m', msg, name);
+          'level=\x1B[33m' + level + '\x1B[39m', 'message="' + msg + '"', 'logger="' + name + '"');
       });
       log = ll.log();
     });
     it('will show a colored log', function() {
-      log.info('green background on date, yellow level.');
+      log.info('green date, yellow level.');
     });
   });
 
@@ -72,21 +101,12 @@ describe('loglove.js', function() {
     });
   });
 
-  // describe('loglove . . . ', function() {
-  //   var log;
-  //   before(function() {
-  //     log = ll.log();
-  //   });
-  //   it('will . . .', function() {
-  //   });
-  // });
-
   describe('smoke test', function() {
     var log;
     before(function() {
       reset('/Users/jstein/ubuntu/loglove');
       log = ll.log(__filename, 'DEBUG', true);
-      ll.formatter(function(name, msg, level) {
+      ll.formatter(function(msg, level, name) {
         return 'HI ' + name + ' ' + level.substr(0, 2) + ' ' + msg;
       });
       ll.configure({
