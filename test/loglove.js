@@ -70,7 +70,7 @@ describe('loglove.js', function() {
       setTimeout(function() {
         assert.equal(log.levelName, 'DEBUG');
         done();
-      }, 1500);
+      }, 1100);
     });
   });
 
