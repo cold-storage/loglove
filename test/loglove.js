@@ -167,7 +167,7 @@ describe('loglove.js', function() {
       reset();
     });
     it('will reset the state', function() {
-      console.log(ll+'');
+      console.log(ll + '');
       assert.equal(ll + '', llToString);
     });
   });

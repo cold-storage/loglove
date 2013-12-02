@@ -48,6 +48,8 @@ They can send it to <a href="http://www.loggly.com">http://www.loggly.com</a>,
 rationale.</p>
 <p>This should work fine unless you want to log different levels or formats
 to different outputs.</p>
+<p>Let me know what you think:
+john curleya johnandkerri littleroundthing com</p>
 
             </div>
             
@@ -139,8 +141,9 @@ has to go in <code>process.env</code> is <code>LOG_LOVE_CONFIG_FILE</code>.</p>
 You can use this to add timestamps, <font color='red'>colors</font>,
 log level, name, etc. to your log messages.
 The callback will be called as follows.</p>
-<pre><code>callback(message, levelString, loggerName);</code></pre>
-<p>This gives you complete control of how your log messages will look.
+<pre><code>callback(levelName, loggerName, args);</code></pre>
+<p><code>args</code> is the arguments that you passed to log.info(), log.debug(), etc.
+This gives you complete control of your log messages.
 To get started you can use a copy of the default formatter
 in the __reset method below.</p>
 
@@ -644,8 +647,10 @@ or <code>process.env.LOG_LOVE_CONFIG_FILE</code> and then call <code>_reset()</c
                 <a class="pilcrow" href="#section-28">&#182;</a>
               </div>
               <p>Default formatter outputs date, level, message and logger name.
-2013-11-30T14:41:56.446Z INF My message here. /my/logger/name.js
-You can copy this and tweak it till your heart&#39;s content.</p>
+Message is colored yellow.</p>
+<p>2013-11-30T14:41:56.446Z INF <font color='yellow'>My message here</font>.
+/my/logger/name.js</p>
+<p>You can copy this and tweak it till your heart&#39;s content.</p>
 
             </div>
             
