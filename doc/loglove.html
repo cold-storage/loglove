@@ -68,13 +68,17 @@ john curleya johnandkerri littleroundthing com</p>
               </div>
               <h2 id="configure">configure</h2>
 <p>Takes a JSON string or object configuration like so.</p>
-<pre><code>{ &quot;/some/logger.js&quot;: &quot;INFO&quot;, &quot;/&quot;: &quot;ERROR&quot; }</code></pre>
+<pre><code>{ &quot;/some/logger.js&quot;: &quot;INFO&quot;,
+  &quot;/&quot;: &quot;ERROR&quot;,
+  &quot;/foo/*&quot;: &quot;WARNING&quot; }</code></pre>
 <p><code>&quot;/some/logger.js&quot;: &quot;INFO&quot;</code> sets the logger named <code>/some/logger.js</code>
 to the <code>INFO</code> level.</p>
 <p><code>&quot;/&quot;: &quot;ERROR&quot;</code> sets the logger with the name <code>/</code> to the <code>ERROR</code>
 level. It also sets the default level (which is <code>INFO</code> if you haven&#39;t
 changed it). All loggers will use the default level unless you specify
 otherwise.</p>
+<p><code>&quot;/foo/*&quot;: &quot;WARNING&quot;</code> sets any logger named <code>/foo</code> or any logger
+below <code>/foo/</code> to <code>WARNING</code>.</p>
 <p>You can also configure <code>RELOAD_INTERVAL_SECONDS</code>.</p>
 <pre><code>{ &quot;RELOAD_INTERVAL_SECONDS&quot;: 60 }</code></pre>
 <p>In conjunction with <code>process.env.LOG_LOVE_CONFIG_FILE</code> this will cause
@@ -181,7 +185,7 @@ has to go in <code>process.env</code> is <code>LOG_LOVE_CONFIG_FILE</code>.</p>
               <h2 id="formatter">formatter</h2>
 <p>Sets the callback function that will format your log messages.
 You can use this to add timestamps, <font color='red'>colors</font>,
-log level, name, etc. to your log messages.
+log level, logger name, etc. to your log messages.
 The callback will be called as follows.</p>
 <pre><code>callback(levelName, loggerName, args);</code></pre>
 <p><code>args</code> is the arguments that you passed to log.info(), log.debug(), etc.
