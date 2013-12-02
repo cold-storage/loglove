@@ -44,14 +44,15 @@ describe('loglove.js', function() {
     var log;
     before(function() {
       log = ll.configure({
-        "/some/**": "DEBUG"
-      }).log('/some/foo');
+        "/a/*": "DEBUG"
+      }).log('/a/b/c/d/e');
       ll.configure({
-        "/some/**": "DEBUG"
+        "/a/b/c/*": "WARNING"
       });
     });
     it('will work', function() {
-      assert.equal(log.levelName, 'DEBUG');
+      log.info(log);
+      assert.equal(log.levelName, 'WARNING');
     });
   });
 
@@ -119,7 +120,7 @@ describe('loglove.js', function() {
       reset(null, 'can\'t find me');
       log = ll.log('/some/logger');
     });
-    it('will load not barf', function() {
+    it('will not barf', function() {
       //console.log(ll + '');
       assert.equal(log.levelName, 'INFO');
     });
