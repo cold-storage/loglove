@@ -35,7 +35,7 @@ to <code>require(&#39;loglove&#39;).configure()</code></p>
 <p>You can easily set your logger names to the source file name.</p>
 <pre><code>log = require(&#39;loglove&#39;).log(__filename)</code></pre>
 <p>If you use this method you probably want to set the <code>LOG_LOVE_ROOT_PATH</code>
-environment variable to the base path of your app so your logger names
+config value to the base path of your app so your logger names
 are relative to that.</p>
 <p>You can safely use loglove in library modules provided you use hard coded
 log names and specify <code>OFF</code> as the level.</p>
@@ -66,30 +66,35 @@ john curleya johnandkerri littleroundthing com</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-2">&#182;</a>
               </div>
-              <h2 id="configure">configure</h2>
+              <h1 id="configure">configure</h1>
 <p>Takes a JSON string or object configuration like so.</p>
-<pre><code>{ &quot;/some/logger.js&quot;: &quot;INFO&quot;,
-  &quot;/&quot;: &quot;ERROR&quot;,
-  &quot;/foo/*&quot;: &quot;WARNING&quot; }</code></pre>
+<pre><code>{ &quot;/some/logger.js&quot;: &quot;INFO&quot;, &quot;/foo/*&quot;: &quot;WARNING&quot; }</code></pre>
 <p><code>&quot;/some/logger.js&quot;: &quot;INFO&quot;</code> sets the logger named <code>/some/logger.js</code>
 to the <code>INFO</code> level.</p>
-<p><code>&quot;/&quot;: &quot;ERROR&quot;</code> sets the logger with the name <code>/</code> to the <code>ERROR</code>
-level. It also sets the default level (which is <code>INFO</code> if you haven&#39;t
-changed it). All loggers will use the default level unless you specify
-otherwise.</p>
-<p><code>&quot;/foo/*&quot;: &quot;WARNING&quot;</code> sets any logger named <code>/foo</code> or any logger
+<p><code>&quot;/foo/*&quot;: &quot;WARNING&quot;</code> sets the logger named <code>/foo</code> or any logger
 below <code>/foo/</code> to <code>WARNING</code>.</p>
+<p>The configuration defaults to <code>{ &quot;/*&quot;: &quot;INFO&quot; }</code>.</p>
 <p>You can also configure <code>RELOAD_INTERVAL_SECONDS</code>.</p>
 <pre><code>{ &quot;RELOAD_INTERVAL_SECONDS&quot;: 60 }</code></pre>
 <p>In conjunction with <code>process.env.LOG_LOVE_CONFIG_FILE</code> this will cause
 the <code>LOG_LOVE_CONFIG_FILE</code> to be reloaded periodically.</p>
-<p>TODO Allow setting <code>LOG_LOVE_ROOT_PATH</code> after loggers have been created.
-make <code>LOG_LOVE_ROOT_PATH</code> part of normal config. So only thing that
-has to go in <code>process.env</code> is <code>LOG_LOVE_CONFIG_FILE</code>.</p>
+<p>The following configuration will make all your logger names relative
+to <code>/a/b/c</code></p>
+<pre><code>{ &quot;LOG_LOVE_ROOT_PATH&quot;: &quot;/a/b/c&quot; }</code></pre>
+<p>This is handy in conjunction with</p>
+<pre><code>log = require(&#39;loglove&#39;).log(__filename)</code></pre>
+<p>If <code>__filename</code>
+resolves to <code>/a/b/c/foo/bar.js</code> then your logger will be named
+<code>/foo/bar.js</code> instead of <code>/a/b/c/foo/bar.js</code>.</p>
+<p>By default we merge the passed <code>config</code> with any existing config.
+Setting <code>{ &quot;OVERWRITE_CONFIG&quot;: true }</code> will cause us to overwrite any existing
+config with the new one.</p>
+<p>Finally <code>{ &quot;SOME_SETTING&quot;: &quot;-&quot; }</code> will remove a setting from the config.
+This only takes effect if <code>OVERWRITE_CONFIG</code> is <code>false</code>.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>exports.configure = <span class="function"><span class="keyword">function</span><span class="params">(config)</span> {</span>
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">configure</span><span class="params">(config)</span> {</span>
   <span class="keyword">if</span> (<span class="keyword">typeof</span> config === <span class="string">'string'</span> || config === String) {
     config = JSON.parse(config);
   }</pre></div></div>
@@ -103,12 +108,19 @@ has to go in <code>process.env</code> is <code>LOG_LOVE_CONFIG_FILE</code>.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-3">&#182;</a>
               </div>
-              <p>merge new config with existing config</p>
+              <p>if not OVERWRITE_CONFIG merge new config with existing config</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  <span class="keyword">for</span> (<span class="keyword">var</span> key <span class="keyword">in</span> config) {
-    ll.config[key] = config[key];
+            <div class="content"><div class='highlight'><pre>  <span class="keyword">if</span> (!config[<span class="string">'OVERWRITE_CONFIG'</span>]) {
+    <span class="keyword">for</span> (<span class="keyword">var</span> key <span class="keyword">in</span> config) {
+      <span class="keyword">var</span> val = config[key];
+      <span class="keyword">if</span> (val === <span class="string">'-'</span>) {
+        <span class="keyword">delete</span> ll.config[key];
+      } <span class="keyword">else</span> {
+        ll.config[key] = config[key];
+      }
+    }
   }</pre></div></div>
             
         </li>
@@ -119,6 +131,23 @@ has to go in <code>process.env</code> is <code>LOG_LOVE_CONFIG_FILE</code>.</p>
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>set default level pattern if not already specified</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="keyword">if</span> (!ll.config[<span class="string">'/*'</span>]) {
+    ll.config[<span class="string">'/*'</span>] = <span class="string">'INFO'</span>;
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
               </div>
               <p>configure each logger based on merged config</p>
 
@@ -131,47 +160,30 @@ has to go in <code>process.env</code> is <code>LOG_LOVE_CONFIG_FILE</code>.</p>
         </li>
         
         
-        <li id="section-5">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-5">&#182;</a>
-              </div>
-              <p>set default level if configured</p>
-
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>  <span class="keyword">if</span> (ll.config[<span class="string">'/'</span>]) {
-    ll.DEFAULT_LEVEL = ll.config[<span class="string">'/'</span>];
-  }
-  <span class="keyword">if</span> (ll.config[<span class="string">'RELOAD_INTERVAL_SECONDS'</span>] &amp;&amp; process.env.LOG_LOVE_CONFIG_FILE) {</pre></div></div>
-            
-        </li>
-        
-        
         <li id="section-6">
             <div class="annotation">
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-6">&#182;</a>
               </div>
-              <p>reload config on a given interval</p>
+              <p>reload config on a given interval if specified</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    setTimeout(<span class="function"><span class="keyword">function</span><span class="params">()</span> {</span>
+            <div class="content"><div class='highlight'><pre>  <span class="keyword">if</span> (ll.config[<span class="string">'RELOAD_INTERVAL_SECONDS'</span>] &amp;&amp; process.env.LOG_LOVE_CONFIG_FILE) {
+    setTimeout(<span class="function"><span class="keyword">function</span><span class="params">()</span> {</span>
       fs.readFile(process.env.LOG_LOVE_CONFIG_FILE, {
         encoding: <span class="string">'utf8'</span>
       }, <span class="function"><span class="keyword">function</span><span class="params">(err, cfg)</span> {</span>
         <span class="keyword">if</span> (!err) {
-          exports.configure(cfg);
+          configure(cfg);
         }
       });
 
     }, ll.config[<span class="string">'RELOAD_INTERVAL_SECONDS'</span>] * <span class="number">1000</span>);
   }
   <span class="keyword">return</span> <span class="keyword">this</span>;
-};</pre></div></div>
+}</pre></div></div>
             
         </li>
         
@@ -182,7 +194,7 @@ has to go in <code>process.env</code> is <code>LOG_LOVE_CONFIG_FILE</code>.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-7">&#182;</a>
               </div>
-              <h2 id="formatter">formatter</h2>
+              <h1 id="formatter">formatter</h1>
 <p>Sets the callback function that will format your log messages.
 You can use this to add timestamps, <font color='red'>colors</font>,
 log level, logger name, etc. to your log messages.
@@ -195,9 +207,9 @@ in the __reset method below.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>exports.formatter = <span class="function"><span class="keyword">function</span> <span class="title">formatter</span><span class="params">(cb)</span> {</span>
-  ll.formatter = cb;
-};</pre></div></div>
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">formatter</span><span class="params">(callback)</span> {</span>
+  ll.formatter = callback;
+}</pre></div></div>
             
         </li>
         
@@ -208,7 +220,7 @@ in the __reset method below.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-8">&#182;</a>
               </div>
-              <h2 id="we-use-syslog-levels-">We use syslog levels.</h2>
+              <h1 id="we-use-syslog-levels-">We use syslog levels.</h1>
 <p><a href="http://en.wikipedia.org/wiki/Syslog">http://en.wikipedia.org/wiki/Syslog</a></p>
 <p>??? Allow custom levels ???</p>
 
@@ -222,17 +234,7 @@ ll.ERROR = <span class="number">3</span>;
 ll.WARNING = <span class="number">4</span>;
 ll.NOTICE = <span class="number">5</span>;
 ll.INFO = <span class="number">6</span>;
-ll.DEBUG = <span class="number">7</span>;
-
-ll.levelNames = [];
-ll.levelNames[<span class="number">0</span>] = <span class="string">'EMERGENCY'</span>;
-ll.levelNames[<span class="number">1</span>] = <span class="string">'ALERT'</span>;
-ll.levelNames[<span class="number">2</span>] = <span class="string">'CRITICAL'</span>;
-ll.levelNames[<span class="number">3</span>] = <span class="string">'ERROR'</span>;
-ll.levelNames[<span class="number">4</span>] = <span class="string">'WARNING'</span>;
-ll.levelNames[<span class="number">5</span>] = <span class="string">'NOTICE'</span>;
-ll.levelNames[<span class="number">6</span>] = <span class="string">'INFO'</span>;
-ll.levelNames[<span class="number">7</span>] = <span class="string">'DEBUG'</span>;</pre></div></div>
+ll.DEBUG = <span class="number">7</span>;</pre></div></div>
             
         </li>
         
@@ -243,13 +245,12 @@ ll.levelNames[<span class="number">7</span>] = <span class="string">'DEBUG'</spa
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-9">&#182;</a>
               </div>
-              <h2 id="constructor">Constructor</h2>
+              <h1 id="constructor">Constructor</h1>
 
             </div>
             
             <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">Log</span><span class="params">(name, levelName, noshow)</span> {</span>
-  name = name || <span class="string">'/'</span>;
-  name = name.substr(ll.rootPath.length);</pre></div></div>
+  name = name || <span class="string">'/'</span>;</pre></div></div>
             
         </li>
         
@@ -328,16 +329,16 @@ gets set and you can check if it matches what you expect.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
-              <h2 id="log">log</h2>
+              <h1 id="log">log</h1>
 <p>Returns the logger of your dreams. All params are optional.
 <code>name</code> defaults to <code>/</code>. <code>level</code> defaults to the default level
 which is <code>INFO</code> unless it has been changed.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>exports.log = <span class="function"><span class="keyword">function</span> <span class="title">log</span><span class="params">(name, level, noshow)</span> {</span>
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">log</span><span class="params">(name, level, noshow)</span> {</span>
   <span class="keyword">return</span> <span class="keyword">new</span> Log(name, level, noshow);
-};</pre></div></div>
+}</pre></div></div>
             
         </li>
         
@@ -348,7 +349,7 @@ which is <code>INFO</code> unless it has been changed.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-15">&#182;</a>
               </div>
-              <h2 id="prototype">prototype</h2>
+              <h1 id="prototype">prototype</h1>
 <p>Here&#39;s what you can do with a logger. Log level descriptions from
 <a href="http://en.wikipedia.org/wiki/Syslog">http://en.wikipedia.org/wiki/Syslog</a></p>
 
@@ -574,15 +575,19 @@ mlog.info(&#39;more logs for fooMethod&#39;);</code></pre>
             
             <div class="content"><div class='highlight'><pre>  __configure: <span class="function"><span class="keyword">function</span> <span class="title">__configure</span><span class="params">()</span> {</span>
     <span class="keyword">this</span>.strength = -<span class="number">1</span>;
+    <span class="keyword">if</span> (ll.config.LOG_LOVE_ROOT_PATH &amp;&amp;
+      <span class="keyword">this</span>.name.indexOf(ll.config.LOG_LOVE_ROOT_PATH) === <span class="number">0</span>) {
+      <span class="keyword">this</span>.name = <span class="keyword">this</span>.name.substr(ll.config.LOG_LOVE_ROOT_PATH.length);
+    }
     <span class="keyword">var</span> key, val, keyNoSlashStar, strength;
     <span class="keyword">for</span> (key <span class="keyword">in</span> ll.config) {
       val = ll.config[key];
       <span class="keyword">if</span> (<span class="keyword">this</span>.name === key) {
-        <span class="keyword">this</span>.__setLevel(val, <span class="number">100</span>);
+        <span class="keyword">this</span>.__setLevelAndStrength(val, <span class="number">100</span>);
       } <span class="keyword">else</span> <span class="keyword">if</span> (key.indexOf(<span class="string">'*'</span>) &gt; -<span class="number">1</span>) {
         keyNoSlashStar = key.substr(<span class="number">0</span>, key.length - <span class="number">2</span>);
         <span class="keyword">if</span> (<span class="keyword">this</span>.name === keyNoSlashStar) {
-          <span class="keyword">this</span>.__setLevel(val, <span class="number">100</span>);
+          <span class="keyword">this</span>.__setLevelAndStrength(val, <span class="number">100</span>);
         } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="keyword">this</span>.name.indexOf(keyNoSlashStar) === <span class="number">0</span>) {</pre></div></div>
             
         </li>
@@ -594,7 +599,7 @@ mlog.info(&#39;more logs for fooMethod&#39;);</code></pre>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-27">&#182;</a>
               </div>
-              <p>wildcard matches with more segments beat those with less so
+              <p>wildcard matches with more segments beat those with less, so
 <code>/foo/bar/*</code> beats <code>/foo/*</code> assuming your logger is named
 <code>/foo/bar/zoo.js</code></p>
 
@@ -602,16 +607,13 @@ mlog.info(&#39;more logs for fooMethod&#39;);</code></pre>
             
             <div class="content"><div class='highlight'><pre>          strength = key.split(<span class="string">'/'</span>).length;
           <span class="keyword">if</span> (strength &gt; <span class="keyword">this</span>.strength) {
-            <span class="keyword">this</span>.__setLevel(val, strength);
+            <span class="keyword">this</span>.__setLevelAndStrength(val, strength);
           }
         }
       }
     }
-    <span class="keyword">if</span> (<span class="keyword">this</span>.strength === -<span class="number">1</span>) {
-      <span class="keyword">this</span>.__setLevel();
-    }
   },
-  __setLevel: <span class="function"><span class="keyword">function</span> <span class="title">__setLevel</span><span class="params">(levelName, strength)</span> {</span>
+  __setLevelAndStrength: <span class="function"><span class="keyword">function</span> <span class="title">__setLevelAndStrength</span><span class="params">(levelName, strength)</span> {</span>
     <span class="keyword">this</span>.strength = strength;</pre></div></div>
             
         </li>
@@ -627,7 +629,7 @@ mlog.info(&#39;more logs for fooMethod&#39;);</code></pre>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    <span class="keyword">this</span>.level = ll[levelName] || ll.DEFAULT_LEVEL;</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">this</span>.level = ll[levelName];</pre></div></div>
             
         </li>
         
@@ -642,7 +644,7 @@ mlog.info(&#39;more logs for fooMethod&#39;);</code></pre>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    <span class="keyword">this</span>.levelName = levelName || ll.levelNames[<span class="keyword">this</span>.level];
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">this</span>.levelName = levelName;
   },</pre></div></div>
             
         </li>
@@ -673,19 +675,18 @@ mlog.info(&#39;more logs for fooMethod&#39;);</code></pre>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-31">&#182;</a>
               </div>
-              <h2 id="tostring">toString</h2>
+              <h1 id="tostring">toString</h1>
 <p>Pretty print loglove.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>exports.toString = <span class="function"><span class="keyword">function</span> <span class="title">toString</span><span class="params">()</span> {</span>
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">toString</span><span class="params">()</span> {</span>
   <span class="keyword">return</span> JSON.stringify({
-    rootPath: ll.rootPath,
     config: ll.config,
     logmap: ll.logmap,
     formatter: ll.formatter + <span class="string">''</span>
   });
-};</pre></div></div>
+}</pre></div></div>
             
         </li>
         
@@ -696,17 +697,15 @@ mlog.info(&#39;more logs for fooMethod&#39;);</code></pre>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-32">&#182;</a>
               </div>
-              <h2 id="__reset">__reset</h2>
+              <h1 id="__reset">__reset</h1>
 <p>Handy for unit testing. Should not be used otherwise.</p>
-<p>For unit testing you can modify <code>process.env.LOG_LOVE_ROOT_PATH</code>
-or <code>process.env.LOG_LOVE_CONFIG_FILE</code> and then call <code>_reset()</code>.</p>
+<p>For unit testing you can modify <code>process.env.LOG_LOVE_CONFIG_FILE</code>
+and then call <code>_reset()</code>.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>exports.__reset = <span class="function"><span class="keyword">function</span> <span class="title">__reset</span><span class="params">()</span> {</span>
-  ll.DEFAULT_LEVEL = ll.INFO;
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">__reset</span><span class="params">()</span> {</span>
   ll.logmap = {};
-  ll.rootPath = process.env.LOG_LOVE_ROOT_PATH || <span class="string">''</span>;
   ll.config = <span class="literal">null</span>;
   <span class="keyword">if</span> (process.env.LOG_LOVE_CONFIG_FILE) {
     <span class="keyword">try</span> {
@@ -731,7 +730,7 @@ or <code>process.env.LOG_LOVE_CONFIG_FILE</code> and then call <code>_reset()</c
             <div class="content"><div class='highlight'><pre>    }
   }
   ll.config = ll.config || {};
-  exports.configure(ll.config);</pre></div></div>
+  configure(ll.config);</pre></div></div>
             
         </li>
         
@@ -756,9 +755,15 @@ or <code>process.env.LOG_LOVE_CONFIG_FILE</code> and then call <code>_reset()</c
       <span class="string">'\x1B[33m'</span> + msg + <span class="string">'\x1B[39m'</span>,
       name);
   };
-};
+}
 
-exports.__reset();
+__reset();
+
+exports.configure = configure;
+exports.formatter = formatter;
+exports.log = log;
+exports.toString = toString;
+exports.__reset = __reset;
 
 <span class="keyword">new</span> Log(<span class="string">'/LOG_LOVE_SYSTEM_LOGGER'</span>).info(<span class="string">'loglove initialized'</span>);</pre></div></div>
             

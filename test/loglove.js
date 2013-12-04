@@ -4,14 +4,10 @@ var ll = require('../lib/loglove'),
   fs = require('fs'),
   log = ll.log(__filename);
 
-var llToString = '{\"rootPath\":\"\",\"config\":{},\"logmap\":{},\"formatter\":\"function (level, name, args) {\\n    var msg = fmt.apply(null, args).replace(\x2F\\\\n|\\\\r\x2Fg, \' \');\\n    return fmt(JSON.stringify(\\n        new Date()).substr(1, 24),\\n      level.substr(0, 3),\\n      \'\\\\x1B[33m\' + msg + \'\\\\x1B[39m\',\\n      name);\\n  }\"}';
+var llToString = '{\"config\":{\"/*\":\"INFO\"},\"logmap\":{},\"formatter\":\"function (level, name, args) {\\n    var msg = fmt.apply(null, args).replace(\x2F\\\\n|\\\\r\x2Fg, \' \');\\n    return fmt(JSON.stringify(\\n        new Date()).substr(1, 24),\\n      level.substr(0, 3),\\n      \'\\\\x1B[33m\' + msg + \'\\\\x1B[39m\',\\n      name);\\n  }\"}';
 
-function reset(rootPath, configFile) {
-  delete process.env.LOG_LOVE_ROOT_PATH;
+function reset(configFile) {
   delete process.env.LOG_LOVE_CONFIG_FILE;
-  if (rootPath) {
-    process.env.LOG_LOVE_ROOT_PATH = rootPath;
-  }
   if (configFile) {
     process.env.LOG_LOVE_CONFIG_FILE = configFile;
   }
@@ -33,6 +29,13 @@ describe('loglove.js', function() {
   //   });
   // });
 
+  describe('config LOG_LOVE_ROOT_PATH', function() {
+    it('will work', function() {
+      var log = ll.configure({"LOG_LOVE_ROOT_PATH":"/a/b"}).log('/a/b/c/d');
+      assert.equal(log.name, '/c/d');
+    });
+  });
+
   describe('method level logging', function() {
     it('will concise as possible', function() {
       var mlog = log.m('someMethodName').info('method specific logger here');
@@ -43,6 +46,7 @@ describe('loglove.js', function() {
   describe('wildcards', function() {
     var log;
     before(function() {
+      reset();
       log = ll.configure({
         "/a/*": "DEBUG"
       }).log('/a/b/c/d/e');
@@ -60,7 +64,7 @@ describe('loglove.js', function() {
     var log;
     before(function() {
       fs.writeFileSync('./test/configs/reload.json', '{"/some/logger": "WARNING", "RELOAD_INTERVAL_SECONDS": 1}');
-      reset(null, './test/configs/reload.json');
+      reset('./test/configs/reload.json');
       log = ll.log('/some/logger');
     });
     it('will reload the config with new value', function(done) {
@@ -105,11 +109,11 @@ describe('loglove.js', function() {
   describe('LOG_LOVE_CONFIG_FILE', function() {
     var log;
     before(function() {
-      reset(null, './test/configs/dummy.json');
+      reset('./test/configs/dummy.json');
       log = ll.log('/some/logger');
     });
     it('will load correctly from file system', function() {
-      //console.log(ll + '');
+      console.log(ll + '');
       assert.equal(log.levelName, 'WARNING');
     });
   });
@@ -117,7 +121,7 @@ describe('loglove.js', function() {
   describe('LOG_LOVE_CONFIG_FILE not found', function() {
     var log;
     before(function() {
-      reset(null, 'can\'t find me');
+      reset('can\'t find me');
       log = ll.log('/some/logger');
     });
     it('will not barf', function() {
@@ -129,7 +133,8 @@ describe('loglove.js', function() {
   describe('smoke test', function() {
     var log;
     before(function() {
-      reset('/Users/jstein/ubuntu/loglove');
+      reset();
+      ll.configure({"LOG_LOVE_ROOT_PATH":"/Users/jstein/ubuntu/loglove"});
       log = ll.log(__filename, 'DEBUG', true);
       ll.formatter(function(level, name, args) {
         var msg = fmt.apply(null, args).replace(/\n|\r/g, ' ');
@@ -163,12 +168,11 @@ describe('loglove.js', function() {
   describe('__reset', function() {
     var log;
     before(function() {
-      reset('blabber');
+      ll.configure({"FOO":"BAR"});
       assert.notEqual(ll + '', llToString);
       reset();
     });
     it('will reset the state', function() {
-      console.log(ll + '');
       assert.equal(ll + '', llToString);
     });
   });
