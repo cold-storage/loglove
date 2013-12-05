@@ -1,7 +1,7 @@
 loglove
 =======
 
-A simple logging facility for node.js.
+A simple logging facility for node.js
 
 Allows for multiple loggers each with its own level.
 
