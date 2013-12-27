@@ -73,7 +73,7 @@ john curleya johnandkerri littleroundthing com</p>
 to the <code>INFO</code> level.</p>
 <p><code>&quot;/foo/*&quot;: &quot;WARNING&quot;</code> sets the logger named <code>/foo</code> or any logger
 below <code>/foo/</code> to <code>WARNING</code>.</p>
-<p>The configuration defaults to <code>{ &quot;/*&quot;: &quot;INFO&quot; }</code>.</p>
+<p>The configuration defaults to <code>{ &quot;/*&quot;: &quot;OFF&quot; }</code>.</p>
 <p>You can also configure <code>RELOAD_INTERVAL_SECONDS</code>.</p>
 <pre><code>{ &quot;RELOAD_INTERVAL_SECONDS&quot;: 60 }</code></pre>
 <p>In conjunction with <code>process.env.LOG_LOVE_CONFIG_FILE</code> this will cause
@@ -96,7 +96,11 @@ This only takes effect if <code>OVERWRITE_CONFIG</code> is <code>false</code>.</
             
             <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">configure</span><span class="params">(config)</span> {</span>
   <span class="keyword">if</span> (<span class="keyword">typeof</span> config === <span class="string">'string'</span> || config === String) {
-    config = JSON.parse(config);
+    <span class="keyword">try</span> {
+      config = JSON.parse(config);
+    } <span class="keyword">catch</span> (err) {
+      <span class="keyword">return</span> <span class="keyword">this</span>;
+    }
   }</pre></div></div>
             
         </li>
@@ -137,7 +141,7 @@ This only takes effect if <code>OVERWRITE_CONFIG</code> is <code>false</code>.</
             </div>
             
             <div class="content"><div class='highlight'><pre>  <span class="keyword">if</span> (!ll.config[<span class="string">'/*'</span>]) {
-    ll.config[<span class="string">'/*'</span>] = <span class="string">'INFO'</span>;
+    ll.config[<span class="string">'/*'</span>] = <span class="string">'OFF'</span>;
   }</pre></div></div>
             
         </li>
@@ -209,6 +213,7 @@ in the __reset method below.</p>
             
             <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">formatter</span><span class="params">(callback)</span> {</span>
   ll.formatter = callback;
+  <span class="keyword">return</span> <span class="keyword">this</span>;
 }</pre></div></div>
             
         </li>
@@ -551,7 +556,11 @@ mlog.info(&#39;more logs for fooMethod&#39;);</code></pre>
             
             <div class="content"><div class='highlight'><pre>  __log: <span class="function"><span class="keyword">function</span><span class="params">(level, args)</span> {</span>
     <span class="keyword">if</span> (<span class="keyword">this</span>.level &gt;= ll[level]) {
-      <span class="keyword">this</span>.__message = ll.formatter(level, <span class="keyword">this</span>.name, args);
+      <span class="keyword">try</span> {
+        <span class="keyword">this</span>.__message = ll.formatter(level, <span class="keyword">this</span>.name, args);
+      } <span class="keyword">catch</span> (err) {
+        <span class="keyword">this</span>.__message = <span class="string">'formatter error: '</span> + err;
+      }
       <span class="keyword">if</span> (!<span class="keyword">this</span>.__noshow) {
         process.stdout.write(<span class="keyword">this</span>.__message + <span class="string">'\n'</span>);
       }
@@ -706,12 +715,15 @@ and then call <code>_reset()</code>.</p>
             
             <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">__reset</span><span class="params">()</span> {</span>
   ll.logmap = {};
-  ll.config = <span class="literal">null</span>;
+  ll.config = {
+    <span class="string">'/*'</span>: <span class="string">'OFF'</span>
+  };
+  <span class="keyword">var</span> cfg = {};
   <span class="keyword">if</span> (process.env.LOG_LOVE_CONFIG_FILE) {
     <span class="keyword">try</span> {
-      ll.config = JSON.parse(fs.readFileSync(process.env.LOG_LOVE_CONFIG_FILE, {
+      cfg = fs.readFileSync(process.env.LOG_LOVE_CONFIG_FILE, {
         encoding: <span class="string">'utf8'</span>
-      }));
+      });
     } <span class="keyword">catch</span> (e) {</pre></div></div>
             
         </li>
@@ -729,8 +741,7 @@ and then call <code>_reset()</code>.</p>
             
             <div class="content"><div class='highlight'><pre>    }
   }
-  ll.config = ll.config || {};
-  configure(ll.config);</pre></div></div>
+  configure(cfg);</pre></div></div>
             
         </li>
         
@@ -765,7 +776,7 @@ exports.log = log;
 exports.toString = toString;
 exports.__reset = __reset;
 
-<span class="keyword">new</span> Log(<span class="string">'/LOG_LOVE_SYSTEM_LOGGER'</span>).info(<span class="string">'loglove initialized'</span>);</pre></div></div>
+console.log(<span class="string">'loglove initialized'</span>, ll.config);</pre></div></div>
             
         </li>
         

@@ -4,7 +4,7 @@ var ll = require('../lib/loglove'),
   fs = require('fs'),
   log = ll.log(__filename);
 
-var llToString = '{\"config\":{\"/*\":\"INFO\"},\"logmap\":{},\"formatter\":\"function (level, name, args) {\\n    var msg = fmt.apply(null, args).replace(\x2F\\\\n|\\\\r\x2Fg, \' \');\\n    return fmt(JSON.stringify(\\n        new Date()).substr(1, 24),\\n      level.substr(0, 3),\\n      \'\\\\x1B[33m\' + msg + \'\\\\x1B[39m\',\\n      name);\\n  }\"}';
+var llToString = '{\"config\":{\"/*\":\"OFF\"},\"logmap\":{},\"formatter\":\"function (level, name, args) {\\n    var msg = fmt.apply(null, args).replace(\x2F\\\\n|\\\\r\x2Fg, \' \');\\n    return fmt(JSON.stringify(\\n        new Date()).substr(1, 24),\\n      level.substr(0, 3),\\n      \'\\\\x1B[33m\' + msg + \'\\\\x1B[39m\',\\n      name);\\n  }\"}';
 
 function reset(configFile) {
   delete process.env.LOG_LOVE_CONFIG_FILE;
@@ -29,9 +29,48 @@ describe('loglove.js', function() {
   //   });
   // });
 
+  describe('crappy config', function() {
+    it('will not crash', function() {
+      reset();
+      ll.configure('function()   return \'a\';}');
+      var log = ll.log('/a/b/c').info(function() {
+        return 'boo';
+      });
+    });
+  });
+
+  describe('crappy log', function() {
+    it('will not crash', function() {
+      reset();
+      ll.configure({
+        '/*': 'DEBUG'
+      });
+      var log = ll.log('/a/b/c').info(function() {
+        return 'boo';
+      });
+    });
+  });
+
+  describe('broken formatter', function() {
+    it('will not crash', function() {
+      reset();
+      ll.formatter(function() {
+        throw Error('formatting error');
+      });
+      ll.configure({
+        '/*': 'DEBUG'
+      });
+      var log = ll.log('/a/b/c').info('should log format error');
+      //console.log(log.__message);
+      assert.equal(log.__message, 'formatter error: Error: formatting error');
+    });
+  });
+
   describe('config LOG_LOVE_ROOT_PATH', function() {
     it('will work', function() {
-      var log = ll.configure({"LOG_LOVE_ROOT_PATH":"/a/b"}).log('/a/b/c/d');
+      var log = ll.configure({
+        "LOG_LOVE_ROOT_PATH": "/a/b"
+      }).log('/a/b/c/d');
       assert.equal(log.name, '/c/d');
     });
   });
@@ -126,7 +165,19 @@ describe('loglove.js', function() {
     });
     it('will not barf', function() {
       //console.log(ll + '');
-      assert.equal(log.levelName, 'INFO');
+      assert.equal(log.levelName, 'OFF');
+    });
+  });
+
+  describe('LOG_LOVE_CONFIG_FILE invalid JSON', function() {
+    var log;
+    before(function() {
+      reset('./test/configs/broken.json');
+      log = ll.log('/some/logger');
+    });
+    it('will not barf', function() {
+      //console.log(ll + '');
+      assert.equal(log.levelName, 'OFF');
     });
   });
 
@@ -134,7 +185,9 @@ describe('loglove.js', function() {
     var log;
     before(function() {
       reset();
-      ll.configure({"LOG_LOVE_ROOT_PATH":"/Users/jstein/ubuntu/loglove"});
+      ll.configure({
+        "LOG_LOVE_ROOT_PATH": "/Users/jstein/ubuntu/loglove"
+      });
       log = ll.log(__filename, 'DEBUG', true);
       ll.formatter(function(level, name, args) {
         var msg = fmt.apply(null, args).replace(/\n|\r/g, ' ');
@@ -168,7 +221,9 @@ describe('loglove.js', function() {
   describe('__reset', function() {
     var log;
     before(function() {
-      ll.configure({"FOO":"BAR"});
+      ll.configure({
+        "FOO": "BAR"
+      });
       assert.notEqual(ll + '', llToString);
       reset();
     });
