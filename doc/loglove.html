@@ -37,8 +37,8 @@ to <code>require(&#39;loglove&#39;).configure()</code></p>
 <p>If you use this method you probably want to set the <code>LOG_LOVE_ROOT_PATH</code>
 config value to the base path of your app so your logger names
 are relative to that.</p>
-<p>You can safely use loglove in library modules provided you use hard coded
-log names and specify <code>OFF</code> as the level.</p>
+<p>You can safely use loglove in library modules provided you
+specify <code>OFF</code> as the level.</p>
 <pre><code>log = require(&#39;loglove&#39;).log(&#39;/us/jsks/somelib.js&#39;, &#39;OFF&#39;)</code></pre>
 <p>Now your library won&#39;t log anything unless your clients configure it to do so.</p>
 <p>We only log to <code>stdout</code>. Let your ops guys take it from there.
@@ -99,6 +99,7 @@ This only takes effect if <code>OVERWRITE_CONFIG</code> is <code>false</code>.</
     <span class="keyword">try</span> {
       config = JSON.parse(config);
     } <span class="keyword">catch</span> (err) {
+      __doReloadLogic();
       <span class="keyword">return</span> <span class="keyword">this</span>;
     }
   }</pre></div></div>
@@ -159,7 +160,10 @@ This only takes effect if <code>OVERWRITE_CONFIG</code> is <code>false</code>.</
             
             <div class="content"><div class='highlight'><pre>  <span class="keyword">for</span> (<span class="keyword">var</span> logName <span class="keyword">in</span> ll.logmap) {
     ll.logmap[logName].__configure();
-  }</pre></div></div>
+  }
+  __doReloadLogic();
+  <span class="keyword">return</span> <span class="keyword">this</span>;
+}</pre></div></div>
             
         </li>
         
@@ -174,7 +178,8 @@ This only takes effect if <code>OVERWRITE_CONFIG</code> is <code>false</code>.</
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  <span class="keyword">if</span> (ll.config[<span class="string">'RELOAD_INTERVAL_SECONDS'</span>] &amp;&amp; process.env.LOG_LOVE_CONFIG_FILE) {
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">__doReloadLogic</span><span class="params">()</span> {</span>
+  <span class="keyword">if</span> (ll.config[<span class="string">'RELOAD_INTERVAL_SECONDS'</span>] &amp;&amp; process.env.LOG_LOVE_CONFIG_FILE) {
     setTimeout(<span class="function"><span class="keyword">function</span><span class="params">()</span> {</span>
       fs.readFile(process.env.LOG_LOVE_CONFIG_FILE, {
         encoding: <span class="string">'utf8'</span>
@@ -186,7 +191,6 @@ This only takes effect if <code>OVERWRITE_CONFIG</code> is <code>false</code>.</
 
     }, ll.config[<span class="string">'RELOAD_INTERVAL_SECONDS'</span>] * <span class="number">1000</span>);
   }
-  <span class="keyword">return</span> <span class="keyword">this</span>;
 }</pre></div></div>
             
         </li>
@@ -227,7 +231,6 @@ in the __reset method below.</p>
               </div>
               <h1 id="we-use-syslog-levels-">We use syslog levels.</h1>
 <p><a href="http://en.wikipedia.org/wiki/Syslog">http://en.wikipedia.org/wiki/Syslog</a></p>
-<p>??? Allow custom levels ???</p>
 
             </div>
             
@@ -272,7 +275,8 @@ ll.DEBUG = <span class="number">7</span>;</pre></div></div>
             
             <div class="content"><div class='highlight'><pre>  <span class="keyword">if</span> (ll.logmap[name]) {
     <span class="keyword">return</span> ll.logmap[name];
-  }</pre></div></div>
+  }
+  ll.logmap[<span class="keyword">this</span>.name] = <span class="keyword">this</span>;</pre></div></div>
             
         </li>
         
@@ -322,7 +326,6 @@ gets set and you can check if it matches what you expect.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>  <span class="keyword">this</span>.__noshow = noshow || <span class="literal">false</span>;
-  ll.logmap[<span class="keyword">this</span>.name] = <span class="keyword">this</span>;
 }</pre></div></div>
             
         </li>
@@ -752,7 +755,7 @@ and then call <code>_reset()</code>.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-34">&#182;</a>
               </div>
-              <p>Default formatter outputs date, level, message and logger name.</p>
+              <p>Default formatter outputs date, level, message (in color) and logger name.</p>
 <pre><code>2013-11-30T14:41:56.446Z INF My message here. /my/logger/name.js</code></pre>
 <p>You can copy this and tweak it till your heart&#39;s content.</p>
 

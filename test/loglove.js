@@ -49,24 +49,7 @@ describe('loglove.js', function() {
         done();
       }, 1100);
     });
-
   });
-
-  // var log;
-  // before(function() {
-  //   fs.writeFileSync('./test/configs/reload.json', '{"/some/logger": "WARNING", "RELOAD_INTERVAL_SECONDS": 1}');
-  //   reset('./test/configs/reload.json');
-  //   log = ll.log('/some/logger');
-  // });
-  // it('will reload the config with new value', function(done) {
-  //   this.timeout(2000);
-  //   assert.equal(log.levelName, 'WARNING');
-  //   fs.writeFileSync('./test/configs/reload.json', '{"/some/logger": "DEBUG", "RELOAD_INTERVAL_SECONDS": 1}');
-  //   setTimeout(function() {
-  //     assert.equal(log.levelName, 'DEBUG');
-  //     done();
-  //   }, 1100);
-  // });
 
   describe('crappy log', function() {
     it('will not crash', function() {
