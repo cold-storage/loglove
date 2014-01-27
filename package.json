@@ -1,7 +1,7 @@
 {
   "name": "loglove",
   "description": "A simple logging facility for node.js",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "author": "John Stein <john@johnandkerri.com>",
   "keywords": [
     "log",

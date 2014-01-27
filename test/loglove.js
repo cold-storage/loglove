@@ -198,7 +198,7 @@ describe('loglove.js', function() {
     before(function() {
       reset();
       ll.configure({
-        "LOG_LOVE_ROOT_PATH": "/Users/jstein/ubuntu/loglove"
+        "LOG_LOVE_ROOT_PATH": process.cwd()
       });
       log = ll.log(__filename, 'DEBUG', true);
       ll.formatter(function(level, name, args) {
