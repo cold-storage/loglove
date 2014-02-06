@@ -6,10 +6,14 @@ var ll = require('../lib/loglove'),
 
 var llToString = '{\"config\":{\"/*\":\"OFF\"},\"logmap\":{},\"formatter\":\"function (level, name, args) {\\n    var msg = fmt.apply(null, args).replace(\x2F\\\\n|\\\\r\x2Fg, \' \');\\n    return fmt(JSON.stringify(\\n        new Date()).substr(1, 24),\\n      level.substr(0, 3),\\n      \'\\\\x1B[33m\' + msg + \'\\\\x1B[39m\',\\n      name);\\n  }\"}';
 
-function reset(configFile) {
+function reset(configFile, rootPath) {
+  delete process.env.LOG_LOVE_ROOT_PATH;
   delete process.env.LOG_LOVE_CONFIG_FILE;
   if (configFile) {
     process.env.LOG_LOVE_CONFIG_FILE = configFile;
+  }
+  if (rootPath) {
+    process.env.LOG_LOVE_ROOT_PATH = rootPath;
   }
   ll.__reset();
 }
@@ -80,9 +84,8 @@ describe('loglove.js', function() {
 
   describe('config LOG_LOVE_ROOT_PATH', function() {
     it('will work', function() {
-      var log = ll.configure({
-        "LOG_LOVE_ROOT_PATH": "/a/b"
-      }).log('/a/b/c/d');
+      reset(null,"/a/b");
+      var log = ll.log('/a/b/c/d');
       assert.equal(log.name, '/c/d');
     });
   });
@@ -196,10 +199,7 @@ describe('loglove.js', function() {
   describe('smoke test', function() {
     var log;
     before(function() {
-      reset();
-      ll.configure({
-        "LOG_LOVE_ROOT_PATH": process.cwd()
-      });
+      reset(null, process.cwd());
       log = ll.log(__filename, 'DEBUG', true);
       ll.formatter(function(level, name, args) {
         var msg = fmt.apply(null, args).replace(/\n|\r/g, ' ');
