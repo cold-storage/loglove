@@ -34,8 +34,9 @@
 to <code>require(&#39;loglove&#39;).configure()</code></p>
 <p>You can easily set your logger names to the source file name.</p>
 <pre><code>log = require(&#39;loglove&#39;).log(__filename)</code></pre>
-<p>If you use this method you probably want to set the <code>LOG_LOVE_ROOT_PATH</code>
-config value to the base path of your app so your logger names
+<p>If you use this method you probably want to
+set <code>process.env.LOG_LOVE_ROOT_PATH</code>
+to the base path of your app so your logger names
 are relative to that.</p>
 <p>You can safely use loglove in library modules provided you
 specify <code>OFF</code> as the level.</p>
@@ -49,7 +50,7 @@ rationale.</p>
 <p>This should work fine unless you want to log different levels or formats
 to different outputs.</p>
 <p>Let me know what you think:
-john curleya johnandkerri littleroundthing com</p>
+john@johnandkerri.com</p>
 
             </div>
             
@@ -78,9 +79,9 @@ below <code>/foo/</code> to <code>WARNING</code>.</p>
 <pre><code>{ &quot;RELOAD_INTERVAL_SECONDS&quot;: 60 }</code></pre>
 <p>In conjunction with <code>process.env.LOG_LOVE_CONFIG_FILE</code> this will cause
 the <code>LOG_LOVE_CONFIG_FILE</code> to be reloaded periodically.</p>
-<p>The following configuration will make all your logger names relative
+<p>The following will make all your logger names relative
 to <code>/a/b/c</code></p>
-<pre><code>{ &quot;LOG_LOVE_ROOT_PATH&quot;: &quot;/a/b/c&quot; }</code></pre>
+<pre><code>process.env.LOG_LOVE_ROOT_PATH=&quot;/a/b/c&quot;</code></pre>
 <p>This is handy in conjunction with</p>
 <pre><code>log = require(&#39;loglove&#39;).log(__filename)</code></pre>
 <p>If <code>__filename</code>
@@ -161,6 +162,10 @@ This only takes effect if <code>OVERWRITE_CONFIG</code> is <code>false</code>.</
             <div class="content"><div class='highlight'><pre>  <span class="keyword">for</span> (<span class="keyword">var</span> logName <span class="keyword">in</span> ll.logmap) {
     ll.logmap[logName].__configure();
   }
+  <span class="keyword">if</span> (!ll.isInitialized) {
+    ll.isInitialized = <span class="literal">true</span>;
+    <span class="keyword">new</span> Log(<span class="string">'/LOGLOVE'</span>).info(<span class="string">'loglove initialized'</span>, ll.config);
+  }
   __doReloadLogic();
   <span class="keyword">return</span> <span class="keyword">this</span>;
 }</pre></div></div>
@@ -179,13 +184,15 @@ This only takes effect if <code>OVERWRITE_CONFIG</code> is <code>false</code>.</
             </div>
             
             <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">__doReloadLogic</span><span class="params">()</span> {</span>
-  <span class="keyword">if</span> (ll.config[<span class="string">'RELOAD_INTERVAL_SECONDS'</span>] &amp;&amp; process.env.LOG_LOVE_CONFIG_FILE) {
+  <span class="keyword">if</span> (ll.config[<span class="string">'RELOAD_INTERVAL_SECONDS'</span>] &amp;&amp; ll.LOG_LOVE_CONFIG_FILE) {
     setTimeout(<span class="function"><span class="keyword">function</span><span class="params">()</span> {</span>
-      fs.readFile(process.env.LOG_LOVE_CONFIG_FILE, {
+      fs.readFile(ll.LOG_LOVE_CONFIG_FILE, {
         encoding: <span class="string">'utf8'</span>
       }, <span class="function"><span class="keyword">function</span><span class="params">(err, cfg)</span> {</span>
         <span class="keyword">if</span> (!err) {
           configure(cfg);
+        } <span class="keyword">else</span> {
+          configure({});
         }
       });
 
@@ -276,7 +283,7 @@ ll.DEBUG = <span class="number">7</span>;</pre></div></div>
             <div class="content"><div class='highlight'><pre>  <span class="keyword">if</span> (ll.logmap[name]) {
     <span class="keyword">return</span> ll.logmap[name];
   }
-  ll.logmap[<span class="keyword">this</span>.name] = <span class="keyword">this</span>;</pre></div></div>
+  ll.logmap[name] = <span class="keyword">this</span>;</pre></div></div>
             
         </li>
         
@@ -587,9 +594,9 @@ mlog.info(&#39;more logs for fooMethod&#39;);</code></pre>
             
             <div class="content"><div class='highlight'><pre>  __configure: <span class="function"><span class="keyword">function</span> <span class="title">__configure</span><span class="params">()</span> {</span>
     <span class="keyword">this</span>.strength = -<span class="number">1</span>;
-    <span class="keyword">if</span> (ll.config.LOG_LOVE_ROOT_PATH &amp;&amp;
-      <span class="keyword">this</span>.name.indexOf(ll.config.LOG_LOVE_ROOT_PATH) === <span class="number">0</span>) {
-      <span class="keyword">this</span>.name = <span class="keyword">this</span>.name.substr(ll.config.LOG_LOVE_ROOT_PATH.length);
+    <span class="keyword">if</span> (ll.LOG_LOVE_ROOT_PATH &amp;&amp;
+      <span class="keyword">this</span>.name.indexOf(ll.LOG_LOVE_ROOT_PATH) === <span class="number">0</span>) {
+      <span class="keyword">this</span>.name = <span class="keyword">this</span>.name.substr(ll.LOG_LOVE_ROOT_PATH.length);
     }
     <span class="keyword">var</span> key, val, keyNoSlashStar, strength;
     <span class="keyword">for</span> (key <span class="keyword">in</span> ll.config) {
@@ -717,14 +724,25 @@ and then call <code>_reset()</code>.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">__reset</span><span class="params">()</span> {</span>
+  <span class="keyword">delete</span> ll.isInitialized;
+  <span class="keyword">if</span> (process.env.LOG_LOVE_ROOT_PATH) {
+    ll.LOG_LOVE_ROOT_PATH = process.env.LOG_LOVE_ROOT_PATH;
+  } <span class="keyword">else</span> {
+    ll.LOG_LOVE_ROOT_PATH = <span class="literal">null</span>;
+  }
+  <span class="keyword">if</span> (process.env.LOG_LOVE_CONFIG_FILE) {
+    ll.LOG_LOVE_CONFIG_FILE = process.env.LOG_LOVE_CONFIG_FILE;
+  } <span class="keyword">else</span> {
+    ll.LOG_LOVE_CONFIG_FILE = <span class="literal">null</span>;
+  }
   ll.logmap = {};
   ll.config = {
     <span class="string">'/*'</span>: <span class="string">'OFF'</span>
   };
   <span class="keyword">var</span> cfg = {};
-  <span class="keyword">if</span> (process.env.LOG_LOVE_CONFIG_FILE) {
+  <span class="keyword">if</span> (ll.LOG_LOVE_CONFIG_FILE) {
     <span class="keyword">try</span> {
-      cfg = fs.readFileSync(process.env.LOG_LOVE_CONFIG_FILE, {
+      cfg = fs.readFileSync(ll.LOG_LOVE_CONFIG_FILE, {
         encoding: <span class="string">'utf8'</span>
       });
     } <span class="keyword">catch</span> (e) {</pre></div></div>
@@ -765,8 +783,22 @@ and then call <code>_reset()</code>.</p>
     <span class="keyword">var</span> msg = fmt.apply(<span class="literal">null</span>, args).replace(<span class="regexp">/\n|\r/g</span>, <span class="string">' '</span>);
     <span class="keyword">return</span> fmt(JSON.stringify(
         <span class="keyword">new</span> Date()).substr(<span class="number">1</span>, <span class="number">24</span>),
-      level.substr(<span class="number">0</span>, <span class="number">3</span>),
-      <span class="string">'\x1B[33m'</span> + msg + <span class="string">'\x1B[39m'</span>,
+      level.substr(<span class="number">0</span>, <span class="number">3</span>),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-35">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <pre><code> &#39;\x1B[33m&#39; + msg + &#39;\x1B[39m&#39;,</code></pre>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      msg,
       name);
   };
 }
@@ -777,9 +809,7 @@ exports.configure = configure;
 exports.formatter = formatter;
 exports.log = log;
 exports.toString = toString;
-exports.__reset = __reset;
-
-console.log(<span class="string">'loglove initialized'</span>, ll.config);</pre></div></div>
+exports.__reset = __reset;</pre></div></div>
             
         </li>
         
