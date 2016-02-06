@@ -134,10 +134,12 @@ class Logger {
   }
 }
 
-class Manager {
-  constructor(formatFn, out) {
-    this._formatFn = formatFn;
-    this._out = out;
+class Loglove {
+  constructor(options) {
+    options = options || {};
+    this._instanceName = options.instanceName || 'instance';
+    this._formatFn = options.formatFn;
+    this._out = options.out;
     this._loggers = new Map();
     this._configurer = new Configurer();
     this._configurer.configure();
@@ -148,6 +150,9 @@ class Manager {
         entry[1]._setLevelAndLevelName(this._configurer.level(entry[0]));
       }
     });
+    if (!Loglove[this._instanceName]) {
+      Loglove[this._instanceName] = this;
+    }
   }
   log(name) {
     name = name || 'default';
@@ -165,8 +170,37 @@ class Manager {
   }
 }
 
-exports = module.exports = Manager;
+exports = module.exports = Loglove;
 
 if (!module.parent) {
-  //console.log(__filename.substring(process.cwd().length));
+  // Here is an example of a custom format function,
+  // and a custom instance name,
+  // and a custom output stream.
+  const formatFn = function(string, levelName) {
+    return levelName +
+      ' ' +
+      this._name +
+      ' ' +
+      string +
+      '\n';
+  };
+  const Writable = require('stream').Writable;
+  const util = require('util');
+  const TestOut = function TestOut(max) {
+    this.messages = [];
+    Writable.call(this);
+  };
+  util.inherits(TestOut, Writable);
+  TestOut.prototype._write = function(chunk, encoding, next) {
+    this.messages.push(chunk + '');
+    next();
+  };
+  const testout = new TestOut();
+  const ll = new Loglove({
+    instanceName: 'harry',
+    formatFn: formatFn,
+    out: testout
+  });
+  Loglove.harry.log('/susie/queue.js').error('we had an error in susie q!');
+  console.log('testout.messages', testout.messages);
 }

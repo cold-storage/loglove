@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const LogLove = require('../');
+const Loglove = require('../');
 
 process.setMaxListeners(100);
 
@@ -53,7 +53,7 @@ describe('Configurer', function() {
 
   describe('constructor no environment', function() {
     reset();
-    let cfg = new LogLove()._configurer;
+    let cfg = new Loglove()._configurer;
     it('should leave _LOGLOVE_CONFIG null', function() {
       assert.equal(cfg._LOGLOVE_CONFIG, null);
     });
@@ -65,7 +65,7 @@ describe('Configurer', function() {
   describe('constructor with LOGLOVE_CONFIG', function() {
     reset();
     process.env.LOGLOVE_CONFIG = './test/love.cfg';
-    let cfg = new LogLove()._configurer;
+    let cfg = new Loglove()._configurer;
     it('should set LOGLOVE_CONFIG', function() {
       assert.equal(cfg._LOGLOVE_CONFIG, './test/love.cfg');
       // cfg.configure();
@@ -74,7 +74,7 @@ describe('Configurer', function() {
 
   describe('_setLevelAndPatterns', function() {
     reset();
-    let cfg = new LogLove()._configurer;
+    let cfg = new Loglove()._configurer;
     it('should not set if both null', function() {
       cfg._setLevelAndPatterns(null, null);
       assert.equal(cfg._patterns.size, 0);
@@ -114,12 +114,12 @@ describe('Configurer', function() {
 
   describe('_loadFileConfig', function() {
     reset();
-    let cfg = new LogLove()._configurer;
+    let cfg = new Loglove()._configurer;
     it('should not error if no file found', function() {
       cfg._loadFileConfig();
     });
     process.env.LOGLOVE_CONFIG = './test/love.cfg';
-    cfg = new LogLove()._configurer;
+    cfg = new Loglove()._configurer;
     it('should read if file found', function() {
       cfg._loadFileConfig();
       assert.equal(cfg._patterns.get('OFF')[0], '/nolog/**');
@@ -136,7 +136,7 @@ describe('Configurer', function() {
     process.env.LOGLOVE_WARN = 'WARN1/ WARN2/';
     process.env.LOGLOVE_INFO = ' /**/INFO1 INFO2/** ';
     process.env.LOGLOVE_DEBUG = '/DEBUG1 DEBUG2 ';
-    let cfg = new LogLove()._configurer;
+    let cfg = new Loglove()._configurer;
     it('should properly set patterns', function() {
       assertEnvConfig(cfg);
     });
@@ -150,7 +150,7 @@ describe('Configurer', function() {
     // process.env.LOGLOVE_WARN = 'WARN1/ WARN2/';
     process.env.LOGLOVE_INFO = ' /**/INFO1 INFO2/** ';
     // process.env.LOGLOVE_DEBUG = '/DEBUG1 DEBUG2 ';
-    let cfg = new LogLove()._configurer;
+    let cfg = new Loglove()._configurer;
     cfg.configure();
     it('should override file config with env config', function() {
       // environment
