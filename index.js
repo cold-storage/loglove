@@ -67,6 +67,7 @@ class Configurer {
     this._setLevelAndPatterns('DEBUG', process.env.LOGLOVE_DEBUG);
   }
   configure() {
+    this._patterns = new Map();
     this._loadFileConfig();
     this._loadEnvConfig();
   }
@@ -85,9 +86,12 @@ class Configurer {
 class Logger {
   constructor(name, level, formatFn, out) {
     this._name = name || 'default';
-    this._level = level === null || level === undefined ? 1 : level;
+    this._setLevelAndLevelName(level);
     this._formatFn = formatFn ? formatFn.bind(this) : this._defaultFormatFn;
     this._out = out || process.stdout;
+  }
+  _setLevelAndLevelName(level) {
+    this._level = level === null || level === undefined ? 1 : level;
     this._levelName = LEVEL_NAME[this._level + ''];
   }
   toString() {
@@ -140,6 +144,9 @@ class Manager {
     this._Logger = Logger;
     process.on('SIGHUP', () => {
       this._configurer.configure();
+      for (let entry of this._loggers) {
+        entry[1]._setLevelAndLevelName(this._configurer.level(entry[0]));
+      }
     });
   }
   log(name) {
