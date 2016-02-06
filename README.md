@@ -2,6 +2,8 @@
 
 A simple, configurable logger for node applications.
 
+Version `3.0.0` is nothing at all like prior versions.
+
 * Multiple named loggers
 * Levels configured by pattern matching on logger name
 * Configuration via environment variables and/or config file
@@ -10,7 +12,7 @@ A simple, configurable logger for node applications.
 We assume
 
 * You only need a single output stream
-* You may want to specify the output stream (default is stdout)
+* You may want to specify the output stream (default is `stdout`)
 * You only need 4 levels, `ERROR`, `WARN`, `INFO`, `DEBUG`
 * You may want to use your own format function
 
@@ -42,6 +44,7 @@ log.error('hello world');
 
 If you specify your file names as follows, you will have a named logger per
 file -- something like: /some/path/myJsFile.js
+This assumes current working directory is the root of your application.
 
 ```
 const log = require('loglove').instance.log(__filename.substring(process.cwd().length));
