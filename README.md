@@ -1,5 +1,10 @@
 # LogLove
 
+[![NPM Version][npm-image]][npm-url]
+[![NPM Downloads][downloads-image]][downloads-url]
+[![Linux Build][travis-image]][travis-url]
+[![Test Coverage][coveralls-image]][coveralls-url]
+
 A simple, configurable logger for node applications.
 
 * Multiple named loggers
