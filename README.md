@@ -22,9 +22,21 @@ npm install loglove
 
 ## Usage
 
+At the entry point of your application you should save a single instance of
+LogLove.
+
 ```
-const loglove = require('loglove')(/* [formatFunciton], [out] */);
-const log = loglove.log('/com/myorg/myapp/mymodule');
+const LogLove = require('loglove');
+LogLove.instance = new LogLove();
+
+// or you could have another instance configured a different way.
+LogLove.instance2 = new LogLove(null, myOutputStream);
+```
+
+In other modules you can get the instance you saved like so.
+
+```
+const log = require('loglove').instance.log('/some/log');
 log.error('hello world');
 ```
 
@@ -32,7 +44,7 @@ If you specify your file names as follows, you will have a named logger per
 file -- something like: /some/path/myJsFile.js
 
 ```
-const log = loglove.log(__filename.substring(process.cwd().length));
+const log = require('loglove').instance.log(__filename.substring(process.cwd().length));
 ```
 
 ## Configuration
