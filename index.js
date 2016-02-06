@@ -101,7 +101,9 @@ class Logger {
     return new Date().toISOString() +
       ' ' +
       levelName +
-      ' ' +
+      ' [' +
+      this._name +
+      '] ' +
       string +
       '\n';
   }

@@ -47,7 +47,7 @@ describe('Logger', function() {
     let log = new love._Logger(null, null, null, myout);
     it('should send to custom output stream', function() {
       log.error('some error message');
-      assert.equal(myout.messages[0].substring(25), 'ERROR some error message\n');
+      assert.equal(myout.messages[0].substring(25), 'ERROR [default] some error message\n');
     });
   });
 
@@ -84,7 +84,7 @@ describe('Logger', function() {
       log.info('info');
       log.debug('debug');
       assert.equal(myout.messages.length, 1);
-      assert.equal(myout.messages[0].substring(25), 'ERROR error\n');
+      assert.equal(myout.messages[0].substring(25), 'ERROR [default] error\n');
     });
   });
 
@@ -98,8 +98,8 @@ describe('Logger', function() {
       log.info('info');
       log.debug('debug');
       assert.equal(myout.messages.length, 2);
-      assert.equal(myout.messages[0].substring(25), 'ERROR error\n');
-      assert.equal(myout.messages[1].substring(25), 'WARN warn\n');
+      assert.equal(myout.messages[0].substring(25), 'ERROR [default] error\n');
+      assert.equal(myout.messages[1].substring(25), 'WARN [default] warn\n');
     });
   });
 
@@ -113,9 +113,9 @@ describe('Logger', function() {
       log.info('info');
       log.debug('debug');
       assert.equal(myout.messages.length, 3);
-      assert.equal(myout.messages[0].substring(25), 'ERROR error\n');
-      assert.equal(myout.messages[1].substring(25), 'WARN warn\n');
-      assert.equal(myout.messages[2].substring(25), 'INFO info\n');
+      assert.equal(myout.messages[0].substring(25), 'ERROR [default] error\n');
+      assert.equal(myout.messages[1].substring(25), 'WARN [default] warn\n');
+      assert.equal(myout.messages[2].substring(25), 'INFO [default] info\n');
     });
   });
 
@@ -129,10 +129,10 @@ describe('Logger', function() {
       log.info('info');
       log.debug('debug');
       assert.equal(myout.messages.length, 4);
-      assert.equal(myout.messages[0].substring(25), 'ERROR error\n');
-      assert.equal(myout.messages[1].substring(25), 'WARN warn\n');
-      assert.equal(myout.messages[2].substring(25), 'INFO info\n');
-      assert.equal(myout.messages[3].substring(25), 'DEBUG debug\n');
+      assert.equal(myout.messages[0].substring(25), 'ERROR [default] error\n');
+      assert.equal(myout.messages[1].substring(25), 'WARN [default] warn\n');
+      assert.equal(myout.messages[2].substring(25), 'INFO [default] info\n');
+      assert.equal(myout.messages[3].substring(25), 'DEBUG [default] debug\n');
     });
   });
 

@@ -1,6 +1,6 @@
 {
   "name": "loglove",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Simple logging for node applications",
   "main": "index.js",
   "scripts": {
