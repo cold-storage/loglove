@@ -1,5 +1,7 @@
 # Loglove
 
+Love your logs!
+
 A simple configurable server side logger for node applications.
 
 Version `3.0.0` is nothing at all like prior versions.
