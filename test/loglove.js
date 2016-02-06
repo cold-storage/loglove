@@ -44,7 +44,7 @@ describe('Loglove', function() {
       assert(l1 !== l2);
     });
     it('should set the level correctly', function() {
-      process.env.LOGLOVE_LOGLOVE_CONFIG = './test/love.cfg';
+      process.env.LOGLOVE_LOGLOVE_CONFIG = './test/love.config';
       process.env.LOGLOVE_ERROR = ' ERROR1.js   ERROR2.js   ';
       process.env.LOGLOVE_INFO = ' /**/INFO1 INFO2/** ';
       let ll2 = new Loglove();

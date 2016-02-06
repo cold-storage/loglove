@@ -55,7 +55,7 @@ describe('Configurer', function() {
     reset();
     let cfg = new Loglove()._configurer;
     it('should leave _LOGLOVE_CONFIG null', function() {
-      assert.equal(cfg._LOGLOVE_CONFIG, null);
+      assert.equal(cfg._LOGLOVE_CONFIG, 'love.config');
     });
     it('should have empty patterns', function() {
       assert.equal(cfg._patterns.size, 0);
@@ -64,10 +64,10 @@ describe('Configurer', function() {
 
   describe('constructor with LOGLOVE_CONFIG', function() {
     reset();
-    process.env.LOGLOVE_CONFIG = './test/love.cfg';
+    process.env.LOGLOVE_CONFIG = './test/love.config';
     let cfg = new Loglove()._configurer;
     it('should set LOGLOVE_CONFIG', function() {
-      assert.equal(cfg._LOGLOVE_CONFIG, './test/love.cfg');
+      assert.equal(cfg._LOGLOVE_CONFIG, './test/love.config');
       // cfg.configure();
     });
   });
@@ -118,7 +118,7 @@ describe('Configurer', function() {
     it('should not error if no file found', function() {
       cfg._loadFileConfig();
     });
-    process.env.LOGLOVE_CONFIG = './test/love.cfg';
+    process.env.LOGLOVE_CONFIG = './test/love.config';
     cfg = new Loglove()._configurer;
     it('should read if file found', function() {
       cfg._loadFileConfig();
@@ -144,7 +144,7 @@ describe('Configurer', function() {
 
   describe('configure', function() {
     reset();
-    process.env.LOGLOVE_CONFIG = './test/love.cfg';
+    process.env.LOGLOVE_CONFIG = './test/love.config';
     // process.env.LOGLOVE_OFF = '  /OFF1/.   OFF2/**    ';
     process.env.LOGLOVE_ERROR = ' ERROR1.js   ERROR2.js   ';
     // process.env.LOGLOVE_WARN = 'WARN1/ WARN2/';

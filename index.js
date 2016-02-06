@@ -23,7 +23,7 @@ const LEVEL_NAME = {
 
 class Configurer {
   constructor() {
-    this._LOGLOVE_CONFIG = process.env.LOGLOVE_CONFIG;
+    this._LOGLOVE_CONFIG = process.env.LOGLOVE_CONFIG || 'love.config';
     this._patterns = new Map();
   }
   toString() {

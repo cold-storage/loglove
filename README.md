@@ -6,12 +6,27 @@ A simple configurable server side logger for node applications.
 
 Version `3.0.0` is nothing at all like prior versions.
 
+**Features**
+
 * Multiple named loggers
 * Levels configured by glob pattern matching on logger name
 * Configuration via environment variables and/or config file
 * Live reconfiguration on `SIGHUP` AKA `kill -1 $PROCESS_ID`
 
-We assume
+**Change log levels without restarting your app**
+
+Live reconfiguration allows you to change log levels without restarting your
+application. This is handy if your app is having issues, and you want to
+see more info but don't want to restart your app.
+
+Live reconfiguration mostly applies to the configuration file since it's kinda
+hard to change environment variables of a running process.
+
+You could use something like https://www.consul.io with
+https://github.com/hashicorp/consul-template to live modify your config file and
+send a SIGHUP to your app telling it to reload its config.
+
+**Assumptions**
 
 * You only need a single output stream per Loglove instance
 * You may want to specify the output stream (default is `stdout`)
@@ -97,8 +112,9 @@ export LOGLOVE_INFO='/foo/** /bar*'
 
 **Configuration File**
 
-You may specify a config file with the `LOGLOVE_CONFIG` environment variable.
-Values in the config file will be overridden environment variables.
+You may specify the location of a config file with the `LOGLOVE_CONFIG`
+environment variable. It defaults to `love.config`. Values in the config file
+will be overridden by environment variables.
 
 ```
 export LOGLOVE_CONFIG='/some/file.conf'
