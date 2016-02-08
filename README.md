@@ -171,18 +171,18 @@ function takes two parameters, `message`, and `levelName`.
 
 You also have access to the logger name via `this._name`.
 
-There is an example at the end of `index.js`
+There is an example at the end of [index.js](https://github.com/johndstein/loglove/blob/master/index.js)
 
 ## Custom Output Stream
 
 You can also pass a custom output stream as the second parameter. We default to
 `stdout`.
 
-There is an example at the end of `index.js`
+There is an example at the end of [index.js](https://github.com/johndstein/loglove/blob/master/index.js)
 
 ## Custom Instance Name
 
 You can specify the Loglove instance name to be whatever you want. This is handy
 if your application uses multiple Loglove instances.
 
-There is an example at the end of `index.js`
+There is an example at the end of [index.js](https://github.com/johndstein/loglove/blob/master/index.js)
