@@ -178,11 +178,11 @@ There is an example at the end of [index.js](https://github.com/johndstein/loglo
 You can also pass a custom output stream as the second parameter. We default to
 `stdout`.
 
-There is an example at the end of [index.js](https://github.com/johndstein/loglove/blob/master/index.js#L199)
+There is an example at the end of [index.js](https://github.com/johndstein/loglove/blob/master/index.js#L200)
 
 ## Custom Instance Name
 
 You can specify the Loglove instance name to be whatever you want. This is handy
 if your application uses multiple Loglove instances.
 
-There is an example at the end of [index.js](https://github.com/johndstein/loglove/blob/master/index.js#L213)
+There is an example at the end of [index.js](https://github.com/johndstein/loglove/blob/master/index.js#L214)
