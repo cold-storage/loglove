@@ -113,7 +113,18 @@ class Logger {
   }
   _log(string, level, levelName) {
     if (this._level >= level) {
-      this._out.write(this._formatFn(string, levelName));
+      // if the first chart is a back tic, we assume they wanted a deferred
+      // template string. if not, we will catch the error and just log out
+      // the string as is.
+      try {
+        string = (string.indexOf('`') === 0) ? eval(string) : string;
+      } catch (err) {
+        //SyntaxError: Unterminated template literal
+      }
+      this._out.write(
+        this._formatFn(
+          string,
+          levelName));
     }
   }
   debug(string) {
@@ -170,12 +181,14 @@ class Loglove {
   }
 }
 
-exports = module.exports = Loglove;
+exports = module.exports = function(options) {
+  return new Loglove(options);
+};
 
 if (!module.parent) {
-  // Here is an example of a custom format function,
-  // and a custom instance name,
-  // and a custom output stream.
+  // This custom format function doesn't include date time.
+  // If you are going to run in Docker and log to syslog, this is a good
+  // format to use because syslog can add the timestamp for you.
   const formatFn = function(string, levelName) {
     return levelName +
       ' ' +
@@ -184,6 +197,8 @@ if (!module.parent) {
       string +
       '\n';
   };
+  // Here is a custom output stream that just saves all the messages in an
+  // array.
   const Writable = require('stream').Writable;
   const util = require('util');
   const TestOut = function TestOut(max) {
@@ -196,11 +211,15 @@ if (!module.parent) {
     next();
   };
   const testout = new TestOut();
+  // Here we pass in a custom instance name. We could have 'larry', 'curly'
+  // and 'moe' instances if we want.
   const ll = new Loglove({
-    instanceName: 'harry',
+    instanceName: 'larry',
     formatFn: formatFn,
     out: testout
   });
-  Loglove.harry.log('/susie/queue.js').error('we had an error in susie q!');
-  console.log('testout.messages', testout.messages);
+  Loglove.larry.log('/susie/queue.js').error('we had an error in susie q!');
+  setInterval(function() {
+    console.log('testout.messages', testout.messages);
+  }, 3000);
 }

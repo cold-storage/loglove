@@ -1,7 +1,6 @@
 'use strict';
 
 const assert = require('assert');
-const Loglove = require('../');
 
 process.setMaxListeners(100);
 
@@ -22,7 +21,7 @@ TestOut.prototype._write = function(chunk, encoding, next) {
 
 describe('Logger', function() {
 
-  let love = new Loglove();
+  let love = require('../')();
 
   describe('Default Logger', function() {
     let log = new love._Logger();

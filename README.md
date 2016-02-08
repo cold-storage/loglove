@@ -2,31 +2,17 @@
 
 Love your logs!
 
-A simple configurable server side logger for node applications.
+##Features
 
-Version `3.0.0` is nothing at all like prior versions.
-
-**Features**
+A simple server side logging facility for node applications or libraries.
 
 * Multiple named loggers
 * Levels configured by glob pattern matching on logger name
 * Configuration via environment variables and/or config file
 * Live reconfiguration on `SIGHUP` AKA `kill -1 $PROCESS_ID`
+* Deferred es6 template string interpolation for performance
 
-**Change log levels without restarting your app**
-
-Live reconfiguration allows you to change log levels without restarting your
-application. This is handy if your app is having issues, and you want to
-see more info but don't want to restart your app.
-
-Live reconfiguration mostly applies to the configuration file since it's kinda
-hard to change environment variables of a running process.
-
-You could use something like https://www.consul.io with
-https://github.com/hashicorp/consul-template to live modify your config file and
-send a SIGHUP to your app telling it to reload its config.
-
-**Assumptions**
+##Assumptions
 
 * You only need a single output stream per Loglove instance
 * You may want to specify the output stream (default is `stdout`)
@@ -36,6 +22,8 @@ send a SIGHUP to your app telling it to reload its config.
 
 You can have multiple output streams by creating multiple instances of Loglove.
 Details at the end of this document.
+
+We would love feedback, help, etc. Just put in a pull request!
 
 ## Installation
 
@@ -49,7 +37,7 @@ At your application entry point get a new instance of Loglove as follows. We
 will save the new instance on the Loglove object at Loglove.instance.
 
 ```
-const loglove = new (require('loglove'))();
+const loglove = require('loglove')();
 ```
 
 In the rest of your application you can get the saved instance like this.
@@ -77,6 +65,44 @@ log.info('this is a info message');
 log.warn('this is a warn message');
 log.error('this is a error message');
 ```
+
+##Deferred es6 template string interpolation
+
+We offer deferred string interpolation as a performance enhancement.
+
+Instead of doing this.
+
+```
+if ( log.isDebug() ) {
+    log.debug(`My nice message with ${JSON.stringify(someObject)}`);
+}
+```
+
+You can do this.
+
+```
+log.debug('`My nice message with ${JSON.stringify(someObject)}`');
+```
+
+If you quote your template string as shown above, `JSON.stringify` won't run
+unless the log level is set to `DEBUG`.
+
+We implement this by checking to see if the first character of your log message
+is a  back-tick (`) (grave accent). If so, we assume you wanted deferred string
+interpolation.
+
+##Change log levels without restarting your app
+
+Live reconfiguration allows you to change log levels without restarting your
+application. This is handy if your app is having issues, and you want to
+see more info but don't want to restart your app.
+
+Live reconfiguration mostly applies to the configuration file since it's kinda
+hard to change environment variables of a running process.
+
+You could use something like https://www.consul.io with
+https://github.com/hashicorp/consul-template to live modify your config file and
+send a SIGHUP to your app telling it to reload its config.
 
 ## Configuration
 
