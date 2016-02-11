@@ -2,6 +2,12 @@
 
 Love your logs!
 
+## TODO Upcoming Changes
+
+* Allow command line arg config
+* Allow pass config to Loglove in code
+* Make config file override all on live reconfig
+
 ##Features
 
 A simple server side logging facility for node applications or libraries.
