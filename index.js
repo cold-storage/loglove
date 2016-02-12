@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+/* jslint evil: true */
+
+// There are some times when eval is absolutely wonderful!
+
 'use strict';
 
 const fs = require('fs');
@@ -22,9 +26,13 @@ const LEVEL_NAME = {
 };
 
 class Configurer {
-  constructor() {
+  constructor(config) {
     this._LOGLOVE_CONFIG = process.env.LOGLOVE_CONFIG || 'love.config';
     this._patterns = new Map();
+    this._patterns.set('DEBUG', '');
+    // _codeConfig
+    // {"WARN": "patterna patternb", "DEBUG": "/foo/bar /zoo/m*00"}
+    this._codeConfig = config;
   }
   toString() {
     return JSON.stringify(this);
@@ -59,6 +67,32 @@ class Configurer {
       // console.log('_loadFileConfig', err);
     }
   }
+
+  // XXX TODO !!!! TEST
+  _loadCodeConfig() {
+    for (var l in this._codeConfig) {
+      if (this._codeConfig.hasOwnProperty(l)) {
+        this._setLevelAndPatterns(l, this._codeConfig[l]);
+      }
+    }
+  }
+
+  // ./foo.js LOGLOVE_DEBUG='this that the other'
+  // for (var arg of process.argv) {
+  //   console.log(arg);
+  // }
+  // /Users/jstein/.nvm/versions/node/v4.2.4/bin/node
+  // /Users/jstein/git/loglove/zoo.js
+  // LOGLOVE_DEBUG=this that the other
+  // XXX TODO !!!! TEST
+  _loadCommandLineConfig() {
+    for (let arg of process.argv) {
+      if (arg.startsWith('LOGLOVE_')) {
+        let aa = arg.split('=');
+        this._setLevelAndPatterns(aa[0].substring('LOGLOVE_'.length), aa[1]);
+      }
+    }
+  }
   _loadEnvConfig() {
     this._setLevelAndPatterns('OFF', process.env.LOGLOVE_OFF);
     this._setLevelAndPatterns('ERROR', process.env.LOGLOVE_ERROR);
@@ -66,17 +100,36 @@ class Configurer {
     this._setLevelAndPatterns('INFO', process.env.LOGLOVE_INFO);
     this._setLevelAndPatterns('DEBUG', process.env.LOGLOVE_DEBUG);
   }
-  configure() {
+  configure(reconfigure) {
     this._patterns = new Map();
-    this._loadFileConfig();
-    this._loadEnvConfig();
+    if (reconfigure) {
+      this._loadFileConfig();
+    } else {
+      this._loadFileConfig();
+      this._loadCodeConfig();
+      this._loadEnvConfig();
+      this._loadCommandLineConfig();
+    }
   }
-  level(name) {
-    for (let entry of this._patterns) {
-      for (let pattern of entry[1]) {
+
+  _checkPattern(name, patterns) {
+    if (patterns) {
+      for (let pattern of patterns) {
         if (minimatch(name, pattern)) {
-          return LEVEL[entry[0]];
+          return true;
         }
+      }
+    }
+  }
+
+  // Return log level for logger name.
+  level(name) {
+    // loop backwards over the levels because we want to take the hightest
+    // level that matches. if DEBUG and OFF both match, we take DEBUG.
+    for (let i = 4; i >= 0; i--) {
+      let patterns = this._patterns.get(LEVEL_NAME[i + '']);
+      if (this._checkPattern(name, patterns)) {
+        return i;
       }
     }
     return LEVEL.ERROR;
@@ -152,11 +205,11 @@ class Loglove {
     this._formatFn = options.formatFn;
     this._out = options.out;
     this._loggers = new Map();
-    this._configurer = new Configurer();
+    this._configurer = new Configurer(options.config);
     this._configurer.configure();
     this._Logger = Logger;
     process.on('SIGHUP', () => {
-      this._configurer.configure();
+      this._configurer.configure(true);
       for (let entry of this._loggers) {
         entry[1]._setLevelAndLevelName(this._configurer.level(entry[0]));
       }

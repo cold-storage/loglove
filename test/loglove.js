@@ -25,7 +25,7 @@ describe('Loglove', function() {
       assert(ll._Logger !== null);
     });
     it('should have on SIGHUP listener', function() {
-      assert((process.listeners('SIGHUP') + '').indexOf('this._configurer.configure();') > -1);
+      assert((process.listeners('SIGHUP') + '').indexOf('this._configurer.configure(true);') > -1);
     });
   });
   describe('log', function() {
