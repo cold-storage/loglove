@@ -1,5 +1,7 @@
 # Loglove
 
+(any release before `3.1.2` is garbage)
+
 Love your logs!
 
 Simple, high performance logging for node 4.2.4 and higher
