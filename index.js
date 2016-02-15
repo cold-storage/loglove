@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
 /* jslint evil: true */
-
-// There are some times when eval is absolutely wonderful!
+// eval isn't always evil
 
 'use strict';
 
@@ -27,9 +26,8 @@ const LEVEL_NAME = {
 
 class Configurer {
   constructor(config) {
-    this._LOGLOVE_CONFIG = process.env.LOGLOVE_CONFIG || 'love.config';
-    this._patterns = new Map();
-    this._patterns.set('DEBUG', '');
+    this._LOGLOVE_CONFIG = process.env.LOGLOVE_CONFIG || './love.config';
+    this._level_patterns = new Map();
     // _codeConfig
     // {"WARN": "patterna patternb", "DEBUG": "/foo/bar /zoo/m*00"}
     this._codeConfig = config;
@@ -48,14 +46,14 @@ class Configurer {
         // "    The quick   brown fox jumps over    the lazy dog.   ".match(/\S+/g);
         // ["The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog."]
         let pa = patterns.match(/\S+/g);
-        this._patterns.set(level, pa);
+        this._level_patterns.set(level, pa);
       }
     }
   }
 
-  // thought about making this async, but for the frequency we will configure
-  // and the fact that you want logger totally configured at beginning of
-  // app startup, better to have it sync.
+  // thought about making this async, but we hardly ever configure or
+  // reconfigure, and you want logger fully configured at beginning of app
+  // startup, so better to have it sync.
   _loadFileConfig() {
     try {
       let lines = fs.readFileSync(this._LOGLOVE_CONFIG).toString().split('\n');
@@ -101,7 +99,6 @@ class Configurer {
     this._setLevelAndPatterns('DEBUG', process.env.LOGLOVE_DEBUG);
   }
   configure(reconfigure) {
-    this._patterns = new Map();
     if (reconfigure) {
       this._loadFileConfig();
     } else {
@@ -126,8 +123,8 @@ class Configurer {
   level(name) {
     // loop backwards over the levels because we want to take the hightest
     // level that matches. if DEBUG and OFF both match, we take DEBUG.
-    for (let i = 4; i >= 0; i--) {
-      let patterns = this._patterns.get(LEVEL_NAME[i + '']);
+    for (let i = LEVEL.DEBUG; i >= 0; i--) {
+      let patterns = this._level_patterns.get(LEVEL_NAME[i + '']);
       if (this._checkPattern(name, patterns)) {
         return i;
       }
@@ -154,70 +151,78 @@ class Logger {
       levelName: this._levelName
     });
   }
-  _defaultFormatFn(string, levelName) {
+  _defaultFormatFn(message, levelName) {
     return new Date().toISOString() +
       ' ' +
       levelName +
       ' [' +
       this._name +
       '] ' +
-      string +
+      message +
       '\n';
   }
-  _log(string, level, levelName) {
+  _log(message, level, levelName) {
     if (this._level >= level) {
       // if the first chart is a back tic, we assume they wanted a deferred
       // template string. if not, we will catch the error and just log out
       // the string as is.
+      // quickly tested in browser.
+      // running eval really doesn't have the performance hit i thought it would
+      // http://jsperf.com/log-string-vs-log-eval
+      // but running json stringify on a string you aren't even going to log
+      // will likely slow your app down if you have lots of log statements
+      // http://jsperf.com/log-string-vs-log-json-stringify
       try {
-        string = (string.indexOf('`') === 0) ? eval(string) : string;
+        message = (message[0] === '`') ? eval(message) : message;
       } catch (err) {
         //SyntaxError: Unterminated template literal
       }
       this._out.write(
         this._formatFn(
-          string,
+          message,
           levelName));
     }
   }
-  debug(string) {
-    this._log(string, 4, 'DEBUG');
+  debug(message) {
+    this._log(message, 4, 'DEBUG');
     return this;
   }
-  info(string) {
-    this._log(string, 3, 'INFO');
+  info(message) {
+    this._log(message, 3, 'INFO');
     return this;
   }
-  warn(string) {
-    this._log(string, 2, 'WARN');
+  warn(message) {
+    this._log(message, 2, 'WARN');
     return this;
   }
-  error(string) {
-    this._log(string, 1, 'ERROR');
+  error(message) {
+    this._log(message, 1, 'ERROR');
     return this;
   }
 }
 
 class Loglove {
   constructor(options) {
-    options = options || {};
-    this._instanceName = options.instanceName || 'instance';
-    this._formatFn = options.formatFn;
-    this._out = options.out;
-    this._loggers = new Map();
-    this._configurer = new Configurer(options.config);
-    this._configurer.configure();
-    this._Logger = Logger;
-    process.on('SIGHUP', () => {
-      this._configurer.configure(true);
-      for (let entry of this._loggers) {
-        entry[1]._setLevelAndLevelName(this._configurer.level(entry[0]));
+      options = options || {};
+      this._instanceName = options.instanceName || 'instance';
+      this._formatFn = options.formatFn;
+      this._out = options.out;
+      this._loggers = new Map();
+      this._configurer = new Configurer(options.config);
+      this._configurer.configure();
+      this._Logger = Logger;
+      // live reload log config from config file.
+      process.on('SIGHUP', () => {
+        this._configurer.configure(true);
+        for (let entry of this._loggers) {
+          entry[1]._setLevelAndLevelName(this._configurer.level(entry[0]));
+        }
+      });
+      if (!Loglove[this._instanceName]) {
+        Loglove[this._instanceName] = this;
       }
-    });
-    if (!Loglove[this._instanceName]) {
-      Loglove[this._instanceName] = this;
     }
-  }
+    // returns singleton (per Loglove instance) logger for the given name.
   log(name) {
     name = name || 'default';
     let log = this._loggers.get(name);
@@ -242,37 +247,37 @@ if (!module.parent) {
   // This custom format function doesn't include date time.
   // If you are going to run in Docker and log to syslog, this is a good
   // format to use because syslog can add the timestamp for you.
-  const formatFn = function(string, levelName) {
-    return levelName +
-      ' ' +
+  // http://dev.splunk.com/view/logging-best-practices/SP-CAAADP6
+  // Use clear key-value pairs
+  const formatFn = function(message, levelName) {
+    return 'level=' + levelName +
+      ' logger="' +
       this._name +
-      ' ' +
-      string +
+      '" ' +
+      message +
       '\n';
   };
   // Here is a custom output stream that just saves all the messages in an
   // array.
-  const Writable = require('stream').Writable;
-  const util = require('util');
-  const TestOut = function TestOut(max) {
-    this.messages = [];
-    Writable.call(this);
-  };
-  util.inherits(TestOut, Writable);
-  TestOut.prototype._write = function(chunk, encoding, next) {
-    this.messages.push(chunk + '');
-    next();
-  };
-  const testout = new TestOut();
+const Writable = require('stream').Writable;
+const util = require('util');
+const ArrayAppendingOutputStream = function ArrayAppendingOutputStream(max) {
+  this.messages = [];
+  Writable.call(this);
+};
+util.inherits(ArrayAppendingOutputStream, Writable);
+ArrayAppendingOutputStream.prototype._write = function(chunk, encoding, next) {
+  this.messages.push(chunk + '');
+  next();
+};
+const myout = new ArrayAppendingOutputStream();
   // Here we pass in a custom instance name. We could have 'larry', 'curly'
   // and 'moe' instances if we want.
   const ll = new Loglove({
     instanceName: 'larry',
     formatFn: formatFn,
-    out: testout
+    out: myout
   });
   Loglove.larry.log('/susie/queue.js').error('we had an error in susie q!');
-  setInterval(function() {
-    console.log('testout.messages', testout.messages);
-  }, 3000);
+  console.log('myout.messages', myout.messages);
 }

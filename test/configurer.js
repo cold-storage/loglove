@@ -26,27 +26,27 @@ function reset() {
 }
 
 function assertFileConfig(cfg) {
-  assert.equal(cfg._patterns.get('OFF')[0], '/nolog/**');
-  assert.equal(cfg._patterns.get('ERROR')[0], '/err/j.s');
-  assert.equal(cfg._patterns.get('WARN')[0], 'warna');
-  assert.equal(cfg._patterns.get('WARN')[1], 'warnb');
-  assert.equal(cfg._patterns.get('INFO')[0], '/server/**');
-  assert.equal(cfg._patterns.get('INFO')[1], '/db');
-  assert.equal(cfg._patterns.get('DEBUG')[0], '/foo*');
-  assert.equal(cfg._patterns.get('DEBUG')[1], '/bar/*');
+  assert.equal(cfg._level_patterns.get('OFF')[0], '/nolog/**');
+  assert.equal(cfg._level_patterns.get('ERROR')[0], '/err/j.s');
+  assert.equal(cfg._level_patterns.get('WARN')[0], 'warna');
+  assert.equal(cfg._level_patterns.get('WARN')[1], 'warnb');
+  assert.equal(cfg._level_patterns.get('INFO')[0], '/server/**');
+  assert.equal(cfg._level_patterns.get('INFO')[1], '/db');
+  assert.equal(cfg._level_patterns.get('DEBUG')[0], '/foo*');
+  assert.equal(cfg._level_patterns.get('DEBUG')[1], '/bar/*');
 }
 
 function assertEnvConfig(cfg) {
-  assert.equal(cfg._patterns.get('OFF')[0], '/OFF1/.');
-  assert.equal(cfg._patterns.get('OFF')[1], 'OFF2/**');
-  assert.equal(cfg._patterns.get('ERROR')[0], 'ERROR1.js');
-  assert.equal(cfg._patterns.get('ERROR')[1], 'ERROR2.js');
-  assert.equal(cfg._patterns.get('WARN')[0], 'WARN1/');
-  assert.equal(cfg._patterns.get('WARN')[1], 'WARN2/');
-  assert.equal(cfg._patterns.get('INFO')[0], '/**/INFO1');
-  assert.equal(cfg._patterns.get('INFO')[1], 'INFO2/**');
-  assert.equal(cfg._patterns.get('DEBUG')[0], '/DEBUG1');
-  assert.equal(cfg._patterns.get('DEBUG')[1], 'DEBUG2');
+  assert.equal(cfg._level_patterns.get('OFF')[0], '/OFF1/.');
+  assert.equal(cfg._level_patterns.get('OFF')[1], 'OFF2/**');
+  assert.equal(cfg._level_patterns.get('ERROR')[0], 'ERROR1.js');
+  assert.equal(cfg._level_patterns.get('ERROR')[1], 'ERROR2.js');
+  assert.equal(cfg._level_patterns.get('WARN')[0], 'WARN1/');
+  assert.equal(cfg._level_patterns.get('WARN')[1], 'WARN2/');
+  assert.equal(cfg._level_patterns.get('INFO')[0], '/**/INFO1');
+  assert.equal(cfg._level_patterns.get('INFO')[1], 'INFO2/**');
+  assert.equal(cfg._level_patterns.get('DEBUG')[0], '/DEBUG1');
+  assert.equal(cfg._level_patterns.get('DEBUG')[1], 'DEBUG2');
 }
 
 describe('Configurer', function() {
@@ -55,10 +55,10 @@ describe('Configurer', function() {
     reset();
     let cfg = new Loglove()._configurer;
     it('should leave _LOGLOVE_CONFIG null', function() {
-      assert.equal(cfg._LOGLOVE_CONFIG, 'love.config');
+      assert.equal(cfg._LOGLOVE_CONFIG, './love.config');
     });
     it('should have empty patterns', function() {
-      assert.equal(cfg._patterns.size, 0);
+      assert.equal(cfg._level_patterns.size, 0);
     });
   });
 
@@ -77,35 +77,35 @@ describe('Configurer', function() {
     let cfg = new Loglove()._configurer;
     it('should not set if both null', function() {
       cfg._setLevelAndPatterns(null, null);
-      assert.equal(cfg._patterns.size, 0);
+      assert.equal(cfg._level_patterns.size, 0);
     });
     it('should not set if level null', function() {
       cfg._setLevelAndPatterns(null, 'one two');
-      assert.equal(cfg._patterns.size, 0);
+      assert.equal(cfg._level_patterns.size, 0);
     });
     it('should not set if level not valid name', function() {
       cfg._setLevelAndPatterns('wwarnning', 'one two');
-      assert.equal(cfg._patterns.size, 0);
+      assert.equal(cfg._level_patterns.size, 0);
     });
     it('should set if level is OFF', function() {
       cfg._setLevelAndPatterns(' OFF ', '  /OFF1/.   OFF2/**    ');
-      assert.equal(cfg._patterns.size, 1);
+      assert.equal(cfg._level_patterns.size, 1);
     });
     it('should set if level is ERROR', function() {
       cfg._setLevelAndPatterns('ERROR   ', ' ERROR1.js   ERROR2.js   ');
-      assert.equal(cfg._patterns.size, 2);
+      assert.equal(cfg._level_patterns.size, 2);
     });
     it('should set if level is WARN', function() {
       cfg._setLevelAndPatterns('WARN ', 'WARN1/ WARN2/');
-      assert.equal(cfg._patterns.size, 3);
+      assert.equal(cfg._level_patterns.size, 3);
     });
     it('should set if level is INFO', function() {
       cfg._setLevelAndPatterns('   INFO', ' /**/INFO1 INFO2/** ');
-      assert.equal(cfg._patterns.size, 4);
+      assert.equal(cfg._level_patterns.size, 4);
     });
     it('should set if level is DEBUG', function() {
       cfg._setLevelAndPatterns('  DEBUG ', '/DEBUG1 DEBUG2 ');
-      assert.equal(cfg._patterns.size, 5);
+      assert.equal(cfg._level_patterns.size, 5);
     });
     it('should properly trim level and patterns and set patterns', function() {
       assertEnvConfig(cfg);
@@ -122,7 +122,7 @@ describe('Configurer', function() {
     cfg = new Loglove()._configurer;
     it('should read if file found', function() {
       cfg._loadFileConfig();
-      assert.equal(cfg._patterns.get('OFF')[0], '/nolog/**');
+      assert.equal(cfg._level_patterns.get('OFF')[0], '/nolog/**');
     });
     it('should set correct values', function() {
       assertFileConfig(cfg);
@@ -154,16 +154,16 @@ describe('Configurer', function() {
     cfg.configure();
     it('should override file config with env config', function() {
       // environment
-      assert.equal(cfg._patterns.get('ERROR')[0], 'ERROR1.js');
-      assert.equal(cfg._patterns.get('ERROR')[1], 'ERROR2.js');
-      assert.equal(cfg._patterns.get('INFO')[0], '/**/INFO1');
-      assert.equal(cfg._patterns.get('INFO')[1], 'INFO2/**');
+      assert.equal(cfg._level_patterns.get('ERROR')[0], 'ERROR1.js');
+      assert.equal(cfg._level_patterns.get('ERROR')[1], 'ERROR2.js');
+      assert.equal(cfg._level_patterns.get('INFO')[0], '/**/INFO1');
+      assert.equal(cfg._level_patterns.get('INFO')[1], 'INFO2/**');
       // config file
-      assert.equal(cfg._patterns.get('OFF')[0], '/nolog/**');
-      assert.equal(cfg._patterns.get('WARN')[0], 'warna');
-      assert.equal(cfg._patterns.get('WARN')[1], 'warnb');
-      assert.equal(cfg._patterns.get('DEBUG')[0], '/foo*');
-      assert.equal(cfg._patterns.get('DEBUG')[1], '/bar/*');
+      assert.equal(cfg._level_patterns.get('OFF')[0], '/nolog/**');
+      assert.equal(cfg._level_patterns.get('WARN')[0], 'warna');
+      assert.equal(cfg._level_patterns.get('WARN')[1], 'warnb');
+      assert.equal(cfg._level_patterns.get('DEBUG')[0], '/foo*');
+      assert.equal(cfg._level_patterns.get('DEBUG')[1], '/bar/*');
     });
     it('should return the correct levels', function() {
       //assert.equal(cfg.level('/nolog'), 0);

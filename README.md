@@ -2,166 +2,162 @@
 
 Love your logs!
 
-## TODO Upcoming Changes
+Simple, high performance logging for node 4.2.4 and higher
 
-* Allow command line arg config
-* Allow pass config to Loglove in code
-* Make config file override all on live reconfig
+* high performance
+* simple flexible configuration
+* multiple log levels
+* multiple named loggers
+* custom message formatting
+* configurable output stream
+* live re-configuration
+* multiple loglove instances
 
-##Features
-
-A simple server side logging facility for node applications or libraries.
-
-* Multiple named loggers
-* Levels configured by glob pattern matching on logger name
-* Configuration via environment variables and/or config file
-* Live reconfiguration on `SIGHUP` AKA `kill -1 $PROCESS_ID`
-* Deferred es6 template string interpolation for performance
-
-##Assumptions
-
-* You only need a single output stream per Loglove instance
-* You may want to specify the output stream (default is `stdout`)
-* You only need 4 levels, `ERROR`, `WARN`, `INFO`, `DEBUG`
-* You may want to use your own format function
-* You are using node version 4.2.4 or higher
-
-You can have multiple output streams by creating multiple instances of Loglove.
-Details at the end of this document.
-
-We would love feedback, help, etc. Just put in a pull request!
+(Loglove should work with any version of node that supports `const`, `class`,
+`template strings` , etc)
 
 ## Installation
 
-```
+```bash
 npm install loglove
 ```
 
 ## Usage
 
-At your application entry point get a new instance of Loglove as follows. We
-will save the new instance on the Loglove object at Loglove.instance.
+At your application entry point get a new instance of Loglove as follows.
 
-```
+```javascript
 const loglove = require('loglove')();
 ```
 
-In the rest of your application you can get the saved instance like this.
+We save the instance on the Loglove object at `Loglove.instance`. In the rest
+of your application you can reference the saved instance like this.
 
-```
+```javascript
 const loglove = require('loglove').instance;
 ```
 
-Here is how you create loggers.
+Create a logger.
 
-```
-// This creates a logger named /some/path/mylib.js where /some/path is relative
-// to the current working directory and mylib.js is the current file.
-const log = loglove.log(__filename.substring(process.cwd().length));
-
-// Or you can just name loggers whatever you like.
-const log2 = loglove.log('/some/logger/name');
+```javascript
+const log = loglove.log('/some/logger/name');
 ```
 
-Here is how you log.
+Log some messages.
 
+```javascript
+log.debug('debug message');
+log.info('info message');
+log.warn('warn message');
+log.error('error message');
 ```
-log.debug('this is a debug message');
-log.info('this is a info message');
-log.warn('this is a warn message');
-log.error('this is a error message');
-```
 
-##Deferred es6 template string interpolation
+## High performance
 
-We offer deferred string interpolation as a performance enhancement.
+If you have lots of log statements, things like `JSON.stringify()`, or even
+simple string concatenation can have a noticable impact on performance.
 
-Instead of doing this.
+We recommend using ES6 template strings instead of string concatenation.
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/template_strings
 
-```
-if ( log.isDebug() ) {
-    log.debug(`My nice message with ${JSON.stringify(someObject)}`);
+We also recommend using Loglove's deferred template pattern so you are
+never penalized for log statements that don't actually get logged.
+
+Instead of doing something like this.
+
+```javascript
+if (log.isInfo()) {
+    log.info(`Some log message ${JSON.stringify(myobject)}`)
 }
+// (note: we don't support .isInfo() this is just hypythetical).
 ```
 
 You can do this.
 
+```javascript
+log.info('`Some log message ${JSON.stringify(myobject)}`')
 ```
-log.debug('`My nice message with ${JSON.stringify(someObject)}`');
-```
 
-If you quote your template string as shown above, `JSON.stringify` won't run
-unless the log level is set to `DEBUG`.
+With either of the above there is no performance penalty if INFO logging is not
+active, but the second method is much nicer.
 
-We implement this by checking to see if the first character of your log message
-is a  back-tick (`) (grave accent). If so, we assume you wanted deferred string
-interpolation.
+Loglove implements deferred template strings by checking if the first character
+of your log message is a back-tick. If so we assume you intended a deferred
+template string (i.e a template string that doesn't get evaluated unless we are
+actually going to log the message).
 
-##Change log levels without restarting your app
+## Simple and flexible configuration
 
-Live reconfiguration allows you to change log levels without restarting your
-application. This is handy if your app is having issues, and you want to
-see more info but don't want to restart your app.
+We configure loggers by specifying one or more patterns for each level.
 
-Live reconfiguration mostly applies to the configuration file since it's kinda
-hard to change environment variables of a running process.
-
-You could use something like https://www.consul.io with
-https://github.com/hashicorp/consul-template to live modify your config file and
-send a SIGHUP to your app telling it to reload its config.
-
-## Configuration
-
-**Matching Patterns**
-
-We configure loggers by specifying one or more patterns for each level like so.
-
-```
-OFF    = /nolog/**
-ERROR  = /err/j.s
-WARN   = warna warnb
-INFO   = /server/** /db
+```bash
 DEBUG  = /foo* /bar/*
+INFO   = /server/** /db
+WARN   = warna warnb
+ERROR  = /err/j.s
+OFF    = /nolog/**
 ```
+
+Patterns are a space separated list of patterns and matching is done per
+https://github.com/isaacs/minimatch
 
 We start by matching a logger's name against the `DEBUG` patterns in the order
-the patterns are specified. If the name matches the pattern, the logger's level
-will be `DEBUG`. If not we move on to `INFO` and so on down to `OFF`.
+they are specified. If the logger name matches the pattern, the logger's level
+will be `DEBUG`. If not we move on to `INFO` and so on down the line to `OFF`.
 
 If we find no match the default level is `ERROR`.
 
-Pattern matching is per https://github.com/isaacs/minimatch
+**Configuration options**
 
-**Environment Variables**
+Loglove supports the following options to configure log levels (in order
+of precedence).
 
-You may configure levels with environment variables like so. Environment variables
-will override any settings in the config file.
+* command line parameters
+* environment variables
+* constructor argument
+* configuration file
+
+Command line parameters override environment variables, which override
+the constructor argument, etc.
+
+NOTE: If you use the live reconfiguration feature to change log levels while
+your app is running, the config file takes precedence over everything.
+
+**Command line parameter configuration**
+
+```bash
+node myapp.js LOGLOVE_INFO='/pattern/**/one /pattern/two*.js'
+```
+
+**Environment variable configuration**
+
+```bash
+LOGLOVE_INFO='/pattern/**/one /pattern/two*.js' node myapp.js
+```
+
+**Constructor argument configuration**
+
+```javascript
+const options = { config: { INFO: '/pattern/**/one /pattern/two*.js' } };
+const loglove = require('loglove')(options);
+```
+
+**Config file configuration**
+
+The location of the config file is controlled by the `LOGLOVE_CONFIG`
+environment variable. The default location is `./love.config`.
+
+TODO maybe allow `LOGLOVE_CONFIG` command line parameter and constructor arg.
 
 ```
-export LOGLOVE_DEBUG='/some/pattern/** /another*'
-export LOGLOVE_INFO='/foo/** /bar*'
-```
+# The config file format is simple.
+# Comments are allowed.
+No real need for comments to start with #.
+Any line that doesn't start with a level in upper case is ignored.
 
-**Configuration File**
+Levels and patterns are separated with an equals sign.
 
-You may specify the location of a config file with the `LOGLOVE_CONFIG`
-environment variable. It defaults to `love.config`. Values in the config file
-will be overridden by environment variables.
-
-```
-export LOGLOVE_CONFIG='/some/file.conf'
-```
-
-The config file format is simple.
-
-```
-# Comments allowed.
-
-In fact any line that doesn't start with a level in upper case
-will be ignored.
-
-Just separate levels and patterns with an equals sign.
-One level per line.
+Specify one level per line.
 
 OFF    = /nolog/**
 ERROR  = /err/j.s
@@ -170,25 +166,138 @@ INFO   = /server/** /db
 DEBUG  = /foo* /bar/*
 ```
 
-## Custom Format Function
+## Multiple log levels
 
-You can use your own custom format function by passing it to Loglove. The format
-function takes two parameters, `message`, and `levelName`.
+Loglove supports the following four levels only.
 
-You also have access to the logger name via `this._name`.
+* debug
+* info
+* warn
+* error
 
-There is an example at the end of [index.js](https://github.com/johndstein/loglove/blob/master/index.js#L187)
+There is no support for custom level names. But you can easily specify your own
+message format function that can output any level names you like.
 
-## Custom Output Stream
+## Multiple named loggers
 
-You can also pass a custom output stream as the second parameter. We default to
-`stdout`.
+The `Loglove.log('/some/log/name')` method returns a singleton (per Loglove
+instance) named logger.
 
-There is an example at the end of [index.js](https://github.com/johndstein/loglove/blob/master/index.js#L200)
+Names are matched against glob patterns to determine the logger's level.
 
-## Custom Instance Name
+You can have as many different loggers as make sense for your appliation, and
+you can name them whatever you like.
 
-You can specify the Loglove instance name to be whatever you want. This is handy
-if your application uses multiple Loglove instances.
+A common pattern is to name loggers according to the file name.
 
-There is an example at the end of [index.js](https://github.com/johndstein/loglove/blob/master/index.js#L214)
+Assuming a present working directory of `/myapp/`, and assuming the following
+statement is in a file located at `/myapp/some/jsfile.js`, the following will
+give you a logger named `/some/jsfile.js`.
+
+```javascript
+const log = loglove.log(__filename.substring(process.cwd().length));
+```
+
+## Custom message formatting
+
+You have full control over log message formatting by passing a custom format
+function to Loglove.
+
+The following format function would work nicely with say Docker logging to
+syslog since syslog adds the timestamp for you. It's also a nice format for
+Splunk because of the clear key value pairs.
+http://dev.splunk.com/view/logging-best-practices/SP-CAAADP6
+
+```javascript
+const loglove = require('loglove')({
+  formatFn: (message, levelName) => {
+    return 'level=' + levelName +
+      ' logger="' +
+      this._name +
+      '" ' +
+      message +
+      '\n';
+  }
+});
+```
+
+## Configurable output stream
+
+You can easily log to file or any output stream you like.  The default output
+stream is `stdout`.
+
+**Logging to file**
+
+```javascript
+const fs = require('fs');
+const loglove = require('loglove')({
+  out: fs.createWriteStream('./log/scrub.log')
+});
+```
+
+**Custom output stream that just adds logs to an array**
+
+```javascript
+const Writable = require('stream').Writable;
+const util = require('util');
+const ArrayAppendingOutputStream = function ArrayAppendingOutputStream() {
+  this.messages = [];
+  Writable.call(this);
+};
+util.inherits(ArrayAppendingOutputStream, Writable);
+ArrayAppendingOutputStream.prototype._write = function(chunk, encoding, next) {
+  this.messages.push(chunk + '');
+  next();
+};
+const myout = new ArrayAppendingOutputStream();
+const loglove = require('loglove')({ out: myout })
+```
+
+**Multiple output streams**
+
+Loglove supports only one output stream per Loglove instance. If you need
+multiple output streams, you can configure multiple Loglove instances.
+
+## Live reconfiguration
+
+If you want to change log levels without restarting your app you can send a
+SIGHUP signal to your app process. On SIGHUP we re-read the config file and make
+any changes specified.
+
+Note: Even if your config file has not changed, live reconfiguration may change
+log levels because on live reconfig the config file has precedence over
+everything else, whereas on app startup the config file is last in precedence.
+
+**Send SIGHUP manually**
+
+```bash
+kill -1 MYAPPPID
+```
+
+**Live reconfiguration with consul-template**
+
+You could also use something like https://www.consul.io with
+https://github.com/hashicorp/consul-template. consul-template will automatically
+detect changes you make to log levels in consul, re-template your config file,
+and send SIGHUP to your app. Beautiful!
+
+## Multiple loglove instances
+
+Multiple Loglove instances allow you to log to multiple output streams. There
+may be other uses for multiple instances, not sure what they would be.
+
+If you need more than one Loglove instance you will need to specify the name of
+each instance as follows.
+
+```javascript
+// do this at your app entry point.
+const llstdout = require('loglove')({ instanceName: 'harry' });
+const llfile = require('loglove')({ instanceName: 'susie', out: myFileOutputStream });
+
+// in the rest of your app get a reference like this.
+const stdoutlog = require('loglove').harry;
+const filelog = require('loglove').susie;
+
+stdoutlog.info('wow! i am logging to stdout');
+filelog.info('gee! i am logging to a file');
+```
