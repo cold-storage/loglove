@@ -184,7 +184,7 @@ message format function that can output any level names you like.
 ## Multiple named loggers
 
 The `Loglove.log('/some/log/name')` method returns a singleton (per Loglove
-instance) named logger.
+instance) named logger. If you don't pass a name the default name is `default`.
 
 Names are matched against glob patterns to determine the logger's level.
 
