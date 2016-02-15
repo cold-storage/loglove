@@ -279,7 +279,9 @@ had issues and what the issues were. But obviously I could not send my logs to
 `stdout`. So I logged to a file. You may not need Loglove in this case, but it's
 an example anyway.
 
-Here's a free tip. Redirect bash script output to syslog.
+**Free tip**
+
+Redirect bash script output to syslog.
 http://urbanautomaton.com/blog/2014/09/09/redirecting-bash-script-output-to-syslog
 
 **Multiple output streams**
