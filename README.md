@@ -13,7 +13,7 @@ Simple, high performance logging for node 4.2.4<sup>*</sup> and higher.
 * live re-configuration
 * multiple loglove instances
 
-<sup>* Any Loglove release prior to `3.1.2` is garbage.</sup>       
+<sup>* Any Loglove release prior to `3.1.2` is garbage.</sup>
 <sup>* Loglove should work with any version of node that supports `const`, `class`,
 template strings, etc.</sup>
 
@@ -255,6 +255,29 @@ ArrayAppendingOutputStream.prototype._write = function(chunk, encoding, next) {
 const myout = new ArrayAppendingOutputStream();
 const loglove = require('loglove')({ out: myout })
 ```
+
+**Logging philosophy**
+
+While Loglove allows you to specify an output stream, we believe it's generally
+best to follow the 'Logs are a stream' philosophy.
+http://adam.heroku.com/past/2011/4/1/logs_are_streams_not_files
+
+>Logs are a stream, and it behooves everyone to treat them as such. Your programs
+should log to stdout and/or stderr and omit any attempt to handle log paths, log
+rotation, or sending logs over the syslog protocol. Directing where the
+program’s log stream goes can be left up to the runtime container: a local
+terminal or IDE (in development environments), an Upstart / Systemd launch
+script (in traditional hosting environments), or a system like Logplex/Heroku
+(in a platform environment).
+
+Having said that, it's not *always* a bad idea to log to file or some other output
+stream.
+
+I just wrote some node scripts to pipeline process thousands of records from
+`stdin` to `stdout`. It's certainly nice to get detailed logs about what records
+had issues and what the issues were. But obviously I could not send my logs to
+`stdout`. So I logged to a file. You may not need Loglove in this case, but it's
+an example anyway.
 
 **Multiple output streams**
 
