@@ -204,7 +204,7 @@ class Logger {
 class Loglove {
   constructor(options) {
       options = options || {};
-      this._instanceName = options.instanceName || 'instance';
+      this._name = options.name || 'instance';
       this._format = options.format;
       this._out = options.out;
       this._loggers = new Map();
@@ -218,8 +218,8 @@ class Loglove {
           entry[1]._setLevelAndLevelName(this._configurer.level(entry[0]));
         }
       });
-      if (!Loglove[this._instanceName]) {
-        Loglove[this._instanceName] = this;
+      if (!Loglove[this._name]) {
+        Loglove[this._name] = this;
       }
     }
     // returns singleton (per Loglove instance) logger for the given name.
@@ -274,7 +274,7 @@ const myout = new ArrayAppendingOutputStream();
   // Here we pass in a custom instance name. We could have 'larry', 'curly'
   // and 'moe' instances if we want.
   const ll = new Loglove({
-    instanceName: 'larry',
+    name: 'larry',
     format: format,
     out: myout
   });

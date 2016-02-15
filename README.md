@@ -322,8 +322,8 @@ each instance as follows.
 
 ```javascript
 // do this at your app entry point.
-const llstdout = require('loglove')({ instanceName: 'harry' });
-const llfile = require('loglove')({ instanceName: 'susie', out: myFileOutputStream });
+const llstdout = require('loglove')({ name: 'harry' });
+const llfile = require('loglove')({ name: 'susie', out: myFileOutputStream });
 
 // in the rest of your app get a reference like this.
 const stdoutlog = require('loglove').harry.log();
