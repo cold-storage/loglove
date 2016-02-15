@@ -326,8 +326,8 @@ const llstdout = require('loglove')({ instanceName: 'harry' });
 const llfile = require('loglove')({ instanceName: 'susie', out: myFileOutputStream });
 
 // in the rest of your app get a reference like this.
-const stdoutlog = require('loglove').harry;
-const filelog = require('loglove').susie;
+const stdoutlog = require('loglove').harry.log();
+const filelog = require('loglove').susie.log();
 
 stdoutlog.info('wow! i am logging to stdout');
 filelog.info('gee! i am logging to a file');
