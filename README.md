@@ -273,7 +273,7 @@ everything else, whereas on app startup the config file is last in precedence.
 **Send SIGHUP manually**
 
 ```bash
-kill -1 MYAPPPID
+kill -1 MY_PID
 ```
 
 **Live reconfiguration with consul-template**
