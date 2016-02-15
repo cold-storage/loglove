@@ -28,7 +28,7 @@ describe('Logger', function() {
     it('should have correct default properties', function() {
       assert.equal(log._name, 'default');
       assert.equal(log._level, 1);
-      assert.equal(log._formatFn.name, '_defaultFormatFn');
+      assert.equal(log._format.name, '_defaultFormatFn');
       assert.equal(log._out, process.stdout);
       assert.equal(log._levelName, 'ERROR');
     });

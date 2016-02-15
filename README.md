@@ -210,7 +210,7 @@ http://dev.splunk.com/view/logging-best-practices/SP-CAAADP6
 
 ```javascript
 const loglove = require('loglove')({
-  formatFn: (message, levelName) => {
+  format: (message, levelName) => {
     return 'level=' + levelName +
       ' logger="' +
       this._name +

@@ -9,8 +9,8 @@ describe('Loglove', function() {
 
   describe('constructor no args', function() {
     let ll = new Loglove();
-    it('should have null formatFn', function() {
-      assert.equal(ll._formatFn, null);
+    it('should have null format', function() {
+      assert.equal(ll._format, null);
     });
     it('should have null out', function() {
       assert.equal(ll.out, null);

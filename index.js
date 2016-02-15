@@ -134,10 +134,10 @@ class Configurer {
 }
 
 class Logger {
-  constructor(name, level, formatFn, out) {
+  constructor(name, level, format, out) {
     this._name = name || 'default';
     this._setLevelAndLevelName(level);
-    this._formatFn = formatFn ? formatFn.bind(this) : this._defaultFormatFn;
+    this._format = format ? format.bind(this) : this._defaultFormatFn;
     this._out = out || process.stdout;
   }
   _setLevelAndLevelName(level) {
@@ -178,7 +178,7 @@ class Logger {
         //SyntaxError: Unterminated template literal
       }
       this._out.write(
-        this._formatFn(
+        this._format(
           message,
           levelName));
     }
@@ -205,7 +205,7 @@ class Loglove {
   constructor(options) {
       options = options || {};
       this._instanceName = options.instanceName || 'instance';
-      this._formatFn = options.formatFn;
+      this._format = options.format;
       this._out = options.out;
       this._loggers = new Map();
       this._configurer = new Configurer(options.config);
@@ -230,7 +230,7 @@ class Loglove {
       log = new Logger(
         name,
         this._configurer.level(name),
-        this._formatFn,
+        this._format,
         this._out
       );
       this._loggers.set(name, log);
@@ -249,7 +249,7 @@ if (!module.parent) {
   // format to use because syslog can add the timestamp for you.
   // http://dev.splunk.com/view/logging-best-practices/SP-CAAADP6
   // Use clear key-value pairs
-  const formatFn = function(message, levelName) {
+  const format = function(message, levelName) {
     return 'level=' + levelName +
       ' logger="' +
       this._name +
@@ -275,7 +275,7 @@ const myout = new ArrayAppendingOutputStream();
   // and 'moe' instances if we want.
   const ll = new Loglove({
     instanceName: 'larry',
-    formatFn: formatFn,
+    format: format,
     out: myout
   });
   Loglove.larry.log('/susie/queue.js').error('we had an error in susie q!');
