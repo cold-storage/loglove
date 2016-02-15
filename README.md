@@ -1,7 +1,5 @@
 # Loglove
 
-(any release before `3.1.2` is garbage)
-
 Love your logs!
 
 Simple, high performance logging for node 4.2.4 and higher
@@ -14,6 +12,8 @@ Simple, high performance logging for node 4.2.4 and higher
 * configurable output stream
 * live re-configuration
 * multiple loglove instances
+
+(any Loglove release prior to `3.1.2` is garbage)
 
 (Loglove should work with any version of node that supports `const`, `class`,
 `template strings` , etc)
