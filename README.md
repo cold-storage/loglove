@@ -1,8 +1,8 @@
 # Loglove
 
-Love your logs!
+Love your logs!<sup>*</sup>
 
-Simple, high performance logging for node 4.2.4 and higher.
+Simple, high performance logging for node 4.2.4<sup>*</sup> and higher.
 
 * high performance
 * simple flexible configuration
