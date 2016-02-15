@@ -13,10 +13,12 @@ Simple, high performance logging for node 4.2.4<sup>*</sup> and higher.
 * live re-configuration
 * multiple loglove instances
 
-<sup>* any Loglove release prior to `3.1.2` is garbage</sup>
+<sup>* Any Loglove release prior to `3.1.2` is garbage.</sup>
 
 <sup>* Loglove should work with any version of node that supports `const`, `class`,
 `template strings` , etc.</sup>
+
+Comments, questions, and pull requests gladly accepted.
 
 ## Installation
 
