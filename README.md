@@ -279,15 +279,15 @@ had issues and what the issues were. But obviously I could not send my logs to
 `stdout`. So I logged to a file. You may not need Loglove in this case, but it's
 an example anyway.
 
-**Free tip**
-
-Redirect bash script output to syslog.
-http://urbanautomaton.com/blog/2014/09/09/redirecting-bash-script-output-to-syslog
-
 **Multiple output streams**
 
 Loglove supports only one output stream per Loglove instance. If you need
 multiple output streams, you can configure multiple Loglove instances.
+
+**Free tip**
+
+Redirect bash script output to syslog.
+http://urbanautomaton.com/blog/2014/09/09/redirecting-bash-script-output-to-syslog
 
 ## Live reconfiguration
 
