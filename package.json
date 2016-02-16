@@ -1,14 +1,14 @@
 {
   "name": "loglove",
   "version": "4.0.0",
-  "description": "Simple logging for node applications",
+  "description": "Simple, high performance logging for node 4.2.4 and higher",
   "main": "index.js",
   "scripts": {
     "start": "echo 'Error: nothing to start. This is a logging library.' && exit 1",
     "pretest": "npm install",
     "test": "node_modules/mocha/bin/mocha"
   },
-  "keywords": ["log", "logger", "logging", "docker", "splunk", "syslog"],
+  "keywords": ["log", "logger", "logging", "docker", "splunk", "syslog", "fast", "simple"],
   "author": "John Stein <john@johnandkerri.com>",
   "engines": {
     "node": ">= 4.2.4"
