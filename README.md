@@ -2,9 +2,8 @@
 
 Love your logs!<sup>*</sup>
 
-Simple, high performance logging for node 4.2.4<sup>*</sup> and higher.
+Simple flexible logging for node 4.2.4<sup>*</sup> and higher.
 
-* high performance
 * simple flexible configuration
 * multiple log levels
 * multiple named loggers
@@ -55,43 +54,10 @@ log.warn('warn message');
 log.error('error message');
 ```
 
-## High performance
-
-If you have lots of log statements, things like `JSON.stringify()`, or even
-simple string concatenation can have a noticable impact on performance.
-
-We recommend using ES6 template strings instead of string concatenation.
-https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/template_strings
-
-We also recommend using Loglove's deferred template pattern so you are
-never penalized for log statements that don't actually get logged.
-
-Instead of doing something like this.
-
-```javascript
-if (log.isInfo()) {
-    log.info(`Some log message ${JSON.stringify(myobject)}`)
-}
-// (note: we don't support .isInfo() this is just hypythetical).
-```
-
-You can do this.
-
-```javascript
-log.info('`Some log message ${JSON.stringify(myobject)}`')
-```
-
-With either of the above there is no performance penalty if INFO logging is not
-active, but the second method is much nicer.
-
-Loglove implements deferred template strings by checking if the first character
-of your log message is a back-tick. If so we assume you intended a deferred
-template string (i.e a template string that doesn't get evaluated unless we are
-actually going to log the message).
-
 ## Simple and flexible configuration
 
 We configure loggers by specifying one or more patterns for each level.
+Patterns are matched against the logger name.
 
 ```bash
 DEBUG  = /foo* /bar/*
@@ -150,8 +116,6 @@ const loglove = require('loglove')(options);
 The location of the config file is controlled by the `LOGLOVE_CONFIG`
 environment variable. The default location is `./love.config`.
 
-TODO maybe allow `LOGLOVE_CONFIG` command line parameter and constructor arg.
-
 ```
 # The config file format is simple.
 # Comments are allowed.
@@ -173,10 +137,10 @@ DEBUG  = /foo* /bar/*
 
 Loglove supports the following four levels only.
 
-* debug
-* info
-* warn
-* error
+* DEBUG
+* INFO
+* WARN
+* ERROR
 
 There is no support for custom level names. But you can easily specify your own
 message format function that can output any level names you like.

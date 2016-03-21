@@ -163,24 +163,7 @@ class Logger {
   }
   _log(message, level, levelName) {
     if (this._level >= level) {
-      // if the first chart is a back tic, we assume they wanted a deferred
-      // template string. if not, we will catch the error and just log out
-      // the string as is.
-      // quickly tested in browser.
-      // running eval really doesn't have the performance hit i thought it would
-      // http://jsperf.com/log-string-vs-log-eval
-      // but running json stringify on a string you aren't even going to log
-      // will likely slow your app down if you have lots of log statements
-      // http://jsperf.com/log-string-vs-log-json-stringify
-      try {
-        message = (message[0] === '`') ? eval(message) : message;
-      } catch (err) {
-        //SyntaxError: Unterminated template literal
-      }
-      this._out.write(
-        this._format(
-          message,
-          levelName));
+      this._out.write(this._format(message, levelName));
     }
   }
   debug(message) {
@@ -259,18 +242,18 @@ if (!module.parent) {
   };
   // Here is a custom output stream that just saves all the messages in an
   // array.
-const Writable = require('stream').Writable;
-const util = require('util');
-const ArrayAppendingOutputStream = function ArrayAppendingOutputStream(max) {
-  this.messages = [];
-  Writable.call(this);
-};
-util.inherits(ArrayAppendingOutputStream, Writable);
-ArrayAppendingOutputStream.prototype._write = function(chunk, encoding, next) {
-  this.messages.push(chunk + '');
-  next();
-};
-const myout = new ArrayAppendingOutputStream();
+  const Writable = require('stream').Writable;
+  const util = require('util');
+  const ArrayAppendingOutputStream = function ArrayAppendingOutputStream(max) {
+    this.messages = [];
+    Writable.call(this);
+  };
+  util.inherits(ArrayAppendingOutputStream, Writable);
+  ArrayAppendingOutputStream.prototype._write = function(chunk, encoding, next) {
+    this.messages.push(chunk + '');
+    next();
+  };
+  const myout = new ArrayAppendingOutputStream();
   // Here we pass in a custom instance name. We could have 'larry', 'curly'
   // and 'moe' instances if we want.
   const ll = new Loglove({

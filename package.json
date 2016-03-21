@@ -1,6 +1,6 @@
 {
   "name": "loglove",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Simple, high performance logging for node 4.2.4 and higher",
   "main": "index.js",
   "scripts": {
