@@ -1,5 +1,7 @@
 # Loglove
 
+DEPRECATED!!! This is a turdball. Check out https://github.com/johndstein/simple-json-log
+
 Love your logs!<sup>*</sup>
 
 Simple flexible logging for node 4.2.4<sup>*</sup> and higher.
