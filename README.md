@@ -1,6 +1,6 @@
 # Loglove
 
-DEPRECATED!!! This is a turdball. Check out https://github.com/johndstein/simple-json-log
+DEPRECATED!!! This is a turdball. Check out https://github.com/johndstein/safe-json-log
 
 Love your logs!<sup>*</sup>
 
